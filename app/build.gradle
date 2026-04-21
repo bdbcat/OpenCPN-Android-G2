@@ -111,7 +111,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 
-    def Qt_Base = "/home/dsr/Projects/opencpn/cache/OCPNAndroidCommon-master/qt5"
+    def Qt_Base = "/home/dsr/Projects/opencpn/cache/OCPNAndroidCoreBuildSupport/qt5"
     def Qt_Build = "build_arm32_19_O3"
     def Qt_Build_ARM64 = "build_arm64_O3"
     def Qt_Build_x86 = "build_x86"
