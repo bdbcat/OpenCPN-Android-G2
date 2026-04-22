@@ -12,7 +12,8 @@
         android:preserveLegacyExternalStorage="true"
         android:allowNativeHeapPointerTagging="false"
         android:enableOnBackInvokedCallback="false"
-        android:extractNativeLibs="true">
+        android:extractNativeLibs="true"
+        >
 
         <uses-library android:name="org.apache.http.legacy" android:required="false" />
 
@@ -33,21 +34,24 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
 
-            <meta-data android:name="android.app.lib_name" android:value="gorp"/>
+            <meta-data android:name="android.app.lib_name" android:value="OpenCPN"/>
             <meta-data android:name="android.app.qt_sources_resource_id" android:resource="@array/qt_sources"/>
             <meta-data android:name="android.app.repository" android:value="default"/>
             <meta-data android:name="android.app.qt_libs_resource_id" android:resource="@array/qt_libs"/>
             <meta-data android:name="android.app.bundled_libs_resource_id" android:resource="@array/bundled_libs"/>
             <!-- Deploy Qt libs as part of package -->
             <meta-data android:name="android.app.bundle_local_qt_libs" android:value="1"/>
+
             <meta-data android:name="android.app.bundled_in_lib_resource_id" android:resource="@array/bundled_in_lib"/>
             <meta-data android:name="android.app.bundled_in_assets_resource_id" android:resource="@array/bundled_in_assets"/>
+
             <!-- Run with local libs -->
             <meta-data android:name="android.app.use_local_qt_libs" android:value="1"/>
             <meta-data android:name="android.app.libs_prefix" android:value="/data/local/tmp/qt/"/>
-            <meta-data android:name="android.app.load_local_libs" android:value="plugins/platforms/android/libqtforandroid.so"/>
-            <meta-data android:name="android.app.load_local_jars" android:value="jar/QtAndroid.jar"/>
+            <meta-data android:name="android.app.load_local_libs_resource_id" android:resource="@array/load_local_libs"/>
+            <meta-data android:name="android.app.load_local_jars" android:value="jar/QtAndroid.jar:jar/QtAndroidExtras.jar"/>
             <meta-data android:name="android.app.static_init_classes" android:value=""/>
+
             <!--  Messages maps -->
             <!--<meta-data android:value="@string/ministro_not_found_msg" android:name="android.app.ministro_not_found_msg"/>
             <meta-data android:value="@string/ministro_needed_msg" android:name="android.app.ministro_needed_msg"/>-->

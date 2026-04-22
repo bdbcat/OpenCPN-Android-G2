@@ -6,40 +6,26 @@
 
     <!-- The following is handled automatically by the deployment tool. It should
          not be edited manually. -->
-
-    <!--<array name="bundled_libs">
-        <item>wx_baseu-3.1</item>
-        <item>wx_baseu_net-3.1</item>
-        <item>wx_baseu_xml-3.1</item>
-        <item>wx_qtu_core-3.1</item>
-        <item>wx_qtu_qa-3.1</item>
-        <item>wx_qtu_html-3.1</item>
-        <item>wx_qtu_adv-3.1</item>
-        <item>wx_qtu_aui-3.1</item>
-        <item>wx_qtu_gl-3.1</item>
-        <item>gorp</item>
-    </array> -->
-
     <array name="bundled_libs">
-       <item>gorp</item>
+        OpenCPN
     </array>
 
     <array name="qt_libs">
-         <item>c++_shared</item>
-         <item>Qt5Core</item>
-         <item>Qt5Gui</item>
-         <item>Qt5Widgets</item>
-         <item>Qt5OpenGL</item>
-         <item>Qt5Test</item>
-         <item>Qt5AndroidExtras</item>
-     </array>
-
-    <array name="bundled_in_lib">
-        <item>libplugins_styles_libqandroidstyle.so:plugins/styles/libqandroidstyle.so</item>
-        <item>libplugins_platforms_android_libqtforandroid.so:plugins/platforms/android/libqtforandroid.so</item>
+        <item>arm64-v8a;c++_shared</item>
+        <item>arm64-v8a;Qt5Core_arm64-v8a</item>
+        <item>arm64-v8a;Qt5AndroidExtras_arm64-v8a</item>
+        <item>arm64-v8a;Qt5Gui_arm64-v8a</item>
+        <item>arm64-v8a;Qt5Widgets_arm64-v8a</item>
+        <item>arm64-v8a;Qt5OpenGL_arm64-v8a</item>
     </array>
 
-    <array name="bundled_in_assets">
+    <array name="load_local_libs">
+        <item>arm64-v8a;libplugins_platforms_qtforandroid_arm64-v8a.so</item>
     </array>
+
+    <array name="bundled_in_lib"> </array>
+    <array name="bundled_in_assets"> </array>
 
 </resources>
+
+
