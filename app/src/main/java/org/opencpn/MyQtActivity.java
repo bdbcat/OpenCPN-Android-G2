@@ -36,8 +36,11 @@ import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import org.opencpn.OCPNNativeLib;
 
 import com.google.android.gms.location.sample.locationupdatesforegroundservice.LocationUpdatesService;
+
+import java.util.HashMap;
 
 
 public class MyQtActivity extends QtActivity implements Receiver {
@@ -68,6 +71,11 @@ public class MyQtActivity extends QtActivity implements Receiver {
     private ConnectivityManager connectivityManager = null;
     private WifiManager wifi = null;
     WifiManager.MulticastLock m_multicastlock = null;
+    private boolean m_backButtonEnable = false;
+    private boolean m_optionsItemActionEnable = false;
+
+    public OCPNNativeLib nativeLib;
+    private HashMap<String, String> exportMap;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -164,9 +172,56 @@ public class MyQtActivity extends QtActivity implements Receiver {
             } else {
                 // Permission has already been granted
             }
+
+            /*
+            // Establish some GUI elements
+            // TODO
+            //setupEdgeToEdge();
+            //TODO
+            /*
+            // Setup ActionBar
+            androidx.appcompat.app.ActionBar actionBar = getSupportActionBar();
+            actionBar.setIcon(R.drawable.opencpn_mobile);
+            // methods to display the icon in the ActionBar
+            actionBar.setDisplayUseLogoEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+
+            // Dis-allow rotation until the app settles down.
+            lockActivityOrientation(this);
+             */
+
+            // Establish device ID and UUID
+            //TODO
+            /*
+            m_UUID = getUUID(this);
+            m_OCPNUUID = getOCPNuniqueID();
+            m_OCPNWVID = getOCPNWVID();
+
+            if ((m_UUID != null) && (m_UUID.length() > 0) && (Build.VERSION.SDK_INT < 29))   // Strictly less than Android 10
+                m_selID = m_UUID;
+            else if (m_OCPNWVID != null)
+                m_selID = m_OCPNWVID;
+            else
+                m_selID = m_OCPNUUID;
+
+            m_systemName = getSystemName(m_selID);
+            Log.i("OpenCPN", "msn " + m_systemName);
+            */
+
+
+            //  Miscellaneous setup
+            //setContentView(R.layout.activity_main);
+            //parentLayout = findViewById(android.R.id.content);
+
+
+            nativeLib = OCPNNativeLib.getInstance();
+
+            ENVIRONMENT_VARIABLES += "\tQT_ANDROID_THEME=" + QT_ANDROID_DEFAULT_THEME
+                    + "/\tQT_ANDROID_THEME_DISPLAY_DPI=" + getResources().getDisplayMetrics().densityDpi + "\t";
+
+            exportMap = new HashMap<String, String>();
+
         }
-
-
     }
 
 
