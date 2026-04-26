@@ -37,7 +37,10 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import org.opencpn.OCPNNativeLib;
+import org.qtproject.qt5.android.bindings.QtApplication;
 
+import com.github.anrwatchdog.ANRError;
+import com.github.anrwatchdog.ANRWatchDog;
 import com.google.android.gms.location.sample.locationupdatesforegroundservice.LocationUpdatesService;
 
 import java.util.HashMap;
@@ -76,6 +79,7 @@ public class MyQtActivity extends QtActivity implements Receiver {
 
     public OCPNNativeLib nativeLib;
     private HashMap<String, String> exportMap;
+    private boolean m_inExit = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -223,6 +227,180 @@ public class MyQtActivity extends QtActivity implements Receiver {
 
         }
     }
+
+
+    //---------------------------------------------------------------------------
+    @Override
+    protected void onDestroy() {
+        //Toast.makeText(getApplicationContext(), "onDestroy",Toast.LENGTH_LONG).show();
+        Log.i("OpenCPN", "onDestroy " + this);
+
+        nativeLib.onDestroy();
+
+        // Disconnect the Locale broadcast receiver
+        //TODO unregisterReceiver(mLocaleChangeReceiver);
+
+
+        super.onDestroy();
+
+        Log.i("OpenCPN", "onDestroy Done");
+
+        //  All ready to kill the process.
+        //  this must be done to clean up Qt, and allow subsequent App restarts
+
+        System.exit(0);
+    }
+
+//---------------------------------------------------------------------------
+
+    @Override
+    protected void onStart() {
+        Log.i("OpenCPN", "onStart " + this);
+
+        //S TODO tring xver = createProcSync5stdout("oexserverd", "-a", "", "", "", "");
+        //Log.i("OpenCPN", "o-charts server test: " + xver);
+
+        //TODO m_notificationManager.cancel(FGBG_notificationID);
+
+        nativeLib.onStart();
+        super.onStart();
+
+        //  ???? QtApplication.invokeDelegate();
+    }
+    //---------------------------------------------------------------------------
+
+    @Override
+    protected void onStop() {
+        Log.i("OpenCPN", "onStop " + this);
+
+        // TODO if (ToastTimerRunning) {
+        //    mtoastCountDown.cancel();
+        //    Log.i("OpenCPN", "onStop " + "Stopping toast timer");
+        //}
+
+
+        //nativeLib.onStop();
+
+       // TODO if (!m_trackContinuous)
+            //queryGPSServer(GPSServer.GPS_OFF);
+
+        if (null != uSerialHelper)
+            uSerialHelper.deinitUSBSerial(this);
+
+        nativeLib.onStop();
+
+        // on "un-commanded" onStop(), we need to spin allowing time for the
+        // NDK library to persist OCPN data in its own thread.
+        // This persist operation is triggered on the wxWidgets event handler
+        // by nativeLib.onStop().
+        if (!m_inExit) {
+            Log.i("OpenCPN", "onStop Spin1...");
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        Log.i("OpenCPN", "onStop calling super");
+        super.onStop();
+
+        Log.i("OpenCPN", "onStop Done");
+    }
+
+    //---------------------------------------------------------------------------
+    @Override
+    protected void onPause() {
+        Log.i("OpenCPN", "onPause " + this);
+
+        // TODO if (ToastTimerRunning) {
+            //mtoastCountDown.cancel();
+            //Log.i("OpenCPN", "onPause " + "Stopping toast timer");
+        //}
+
+        if (null != nativeLib)
+            nativeLib.onPause();
+
+        // Disconnect the SailTimer API broadcast receiver
+        //TODO unregisterReceiver(mGattUpdateReceiver);
+
+        // if background tracking is enabled, post a specific notification
+        //TODO
+        /*
+        if (m_trackContinuous && !m_inExit) {
+            mNotificationBuilder.setContentTitle("OpenCPN Message")
+                    .setContentText("OpenCPN is tracking device location in background.")
+                    .setSmallIcon(R.drawable.opencpn_mobile_notification)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            // notificationID allows you to update the notification later on.
+            mNotificationManager.notify(FGBG_notificationID, mNotificationBuilder.build());
+        }
+        */
+
+        super.onPause();
+        if (!m_inExit)
+            QtApplication.invokeDelegate();
+
+        Log.i("OpenCPN", "onPause done");
+
+        // Sometimes, the Qt backend does not allow the Java frontend to call onStop() and onDestroy()
+        // after a double-back click.
+        // When this happens, the app is left in an undefined state, since the wxWidgets event loop is gone.
+        // If we detect this case, the simple, but draconian solution is to kill the app summarily after 3 seconds
+        if (m_inExit) {
+            new ANRWatchDog(3000).setANRListener(new ANRWatchDog.ANRListener() {
+                @Override
+                public void onAppNotResponding(ANRError error) {
+                    Log.i("OpenCPN", "***ANR Exit");
+                    finish();
+                    System.exit(0);
+
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        Log.i("OpenCPN", "onResume " + this);
+
+        m_inExit = false;
+
+        if (null != nativeLib)
+            nativeLib.onResume();
+
+
+        //TODO
+        // if (null != uSerialHelper) {
+            //uSerialHelper.initUSBSerial(this);
+            //m_scannedSerial = scanSerialPorts(UsbSerialHelper.SCAN);      // Full scan.
+        //}
+
+        super.onResume();
+
+        // TODO
+        /*
+        //Register SailTimer broadcast receiver for updates
+        //registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        ContextCompat.registerReceiver(this, mGattUpdateReceiver,
+                makeGattUpdateIntentFilter(), ContextCompat.RECEIVER_NOT_EXPORTED);
+        */
+
+        QtApplication.invokeDelegate();
+    }
+
+
+
+
+
+
+
+
+
+
 
 
     //  Various Utiilty functions
