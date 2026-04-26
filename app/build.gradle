@@ -509,7 +509,7 @@ dependencies {
     }
 
     task copyOCPN_CORE_64(type: Copy) {
-        from "${OCPN_Base}/${OCPN_Build_64}/libgorp.so"
+        from "/home/dsr/Projects/opencpn/build_android_64_515_27_16k/libOpenCPN_arm64-v8a.so"
         into 'src/main/jniLibs/arm64-v8a'
     }
 
@@ -661,7 +661,7 @@ dependencies {
         //preBuild.dependsOn(copyQTLibs_x86)
 
         //preBuild.dependsOn(copyOCPN_CORE)
-        //preBuild.dependsOn(copyOCPN_CORE_64)
+        preBuild.dependsOn(copyOCPN_CORE_64)
         //preBuild.dependsOn(copyOCPN_CORE_x86)
 
         //preBuild.dependsOn(copyDRAW_PIFiles)
