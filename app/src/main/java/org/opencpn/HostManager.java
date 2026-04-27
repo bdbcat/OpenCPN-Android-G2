@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.app.AlertDialog;
@@ -37,6 +38,10 @@ public class HostManager {
     private boolean m_fullScreen = false;
     public android.graphics.Insets m_insets = android.graphics.Insets.NONE;
 
+    private int insetTop = 0;
+    private int insetBottom = 0;
+    private int insetLeft = 0;
+    private int insetRight = 0;
 
     public HostManager(Activity activity) {
         this.activity = activity;
@@ -91,6 +96,8 @@ public class HostManager {
         }
 
         float tsize = new Button(activity).getTextSize();
+
+        int tbs = getEffectiveTopInset();
 
         return String.format("%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%f;%d;%d;%d;%d;%d",
                 dm.xdpi, dm.density, dm.densityDpi,
@@ -155,6 +162,11 @@ public class HostManager {
 
         return s;
     }
+
+    public int getInsetTop() { return insetTop; }
+    public int getInsetBottom() { return insetBottom; }
+    public int getInsetLeft() { return insetLeft; }
+    public int getInsetRight() { return insetRight; }
 
     private String resolveFilesDir() {
         String filesDir = "";
@@ -392,5 +404,34 @@ public class HostManager {
                     activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
     }
+    public void initInsetsListener() {
+        View root = activity.getWindow().getDecorView();
 
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
+
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets sys =
+                        insets.getInsets(android.view.WindowInsets.Type.systemBars());
+
+                insetTop = sys.top;
+                insetBottom = sys.bottom;
+                insetLeft = sys.left;
+                insetRight = sys.right;
+            } else {
+                insetTop = insets.getSystemWindowInsetTop();
+                insetBottom = insets.getSystemWindowInsetBottom();
+                insetLeft = insets.getSystemWindowInsetLeft();
+                insetRight = insets.getSystemWindowInsetRight();
+            }
+
+            return insets;
+        });
+
+        root.requestApplyInsets();
+    }
+
+    public int getEffectiveTopInset() {
+        int toolbarHeight = 400; //getToolbarHeight(); // from ToolbarController
+        return insetTop + toolbarHeight;
+    }
 }

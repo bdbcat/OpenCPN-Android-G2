@@ -7,7 +7,13 @@ import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.PopupMenu;
 
+import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.bindings.QtActivity;
 
 public class MyQtActivity extends QtActivity {
@@ -17,6 +23,8 @@ public class MyQtActivity extends QtActivity {
     private ConnectivityHelper connectivity;
     private UsbController usb;
     private HostManager hostManager;
+    private MenuController menuController;
+    private ToolbarController toolbarController;
     private String m_nativeLibraryDir;
     private boolean m_trackContinuous;
     private boolean m_inExit = false;
@@ -33,6 +41,8 @@ public class MyQtActivity extends QtActivity {
         preferences = new PreferencesManager(this);
         connectivity = new ConnectivityHelper(this);
         usb = new UsbController();
+        menuController = new MenuController(this);
+        toolbarController = new ToolbarController(this, menuController);
 
         // --- Bridge Init ---
         OpenCPNBridge.init(this);
@@ -69,6 +79,9 @@ public class MyQtActivity extends QtActivity {
 
         // TODO ENVIRONMENT_VARIABLES setup (QT_ANDROID_THEME, DPI, etc.)
         // TODO exportMap initialization (if still required)
+
+        //setContentView(R.layout.activity_main);
+
     }
 
     private void initNativeLibraryDir() {
@@ -131,6 +144,14 @@ public class MyQtActivity extends QtActivity {
         // TODO register SailTimer / BLE receiver
 
         super.onResume();
+
+        if (toolbarController != null) {
+            toolbarController.init();
+        }
+
+        //hostManager.initInsetsListener();
+
+
     }
 
     @Override
@@ -194,6 +215,50 @@ public class MyQtActivity extends QtActivity {
         System.exit(0);
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+
+        //if (hasFocus) {
+        //    showMenu();
+        //}
+    }
+
+    public void xshowMenu() {
+        View root = findViewById(android.R.id.content);
+        final View anchor = getWindow().getDecorView();
+
+        PopupMenu popup = new PopupMenu(this, root);
+        popup.getMenuInflater().inflate(R.menu.activity_main_actions, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            return menuController.handle(item);
+        });
+
+        popup.show();
+    }
+
+    public void showMenu() {
+        final ViewGroup root = (ViewGroup)getWindow().getDecorView();
+
+        final View anchor = new View(this);
+        anchor.setLayoutParams(new ViewGroup.LayoutParams(1, 1));
+        root.addView(anchor);
+
+        anchor.post(() -> {
+            PopupMenu popup = new PopupMenu(this, anchor);
+            popup.getMenuInflater().inflate(R.menu.activity_main_actions, popup.getMenu());
+
+            popup.setOnMenuItemClickListener(item ->
+                    menuController.handle(item)
+            );
+
+            popup.setOnDismissListener(menu -> root.removeView(anchor));
+
+            popup.show();
+        });
+    }
+
 
     // JNI methods, redirecting to appropriate controllers
 
@@ -254,6 +319,7 @@ public class MyQtActivity extends QtActivity {
 
     public String DisableRotation() {
         hostManager.lockActivityOrientation(this);
+        getWindow().getDecorView().setAlpha(0.5f);
         return "OK";
     }
 
@@ -261,6 +327,7 @@ public class MyQtActivity extends QtActivity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         return "OK";
     }
+
 
 
 }
