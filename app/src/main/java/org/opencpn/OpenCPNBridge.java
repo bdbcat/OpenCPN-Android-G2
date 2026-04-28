@@ -170,7 +170,8 @@ public class OpenCPNBridge {
 
         boolean needsCopy = checkInstallState(m_filesDir);
 
-        if (needsCopy) {
+        //if (needsCopy)
+        {
             CreateCachedVersionFile();
             unpackAssets(m_filesDir);
         }

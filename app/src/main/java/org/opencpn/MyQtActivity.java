@@ -7,11 +7,17 @@ import android.content.pm.ApplicationInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.Toolbar;
+
+//import androidx.appcompat.widget.Toolbar;
 
 import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.bindings.QtActivity;
@@ -48,6 +54,8 @@ public class MyQtActivity extends QtActivity {
         OpenCPNBridge.init(this);
         OpenCPNBridge.getInstance(this).onCreate(getIntent());
 
+        OpenCPNBridge.getInstance(this).initFilesystem();
+
         // TODO Some legacy onCreate tasks may move fully into OpenCPNBridge
 
         // --- Native library dir ---
@@ -80,7 +88,16 @@ public class MyQtActivity extends QtActivity {
         // TODO ENVIRONMENT_VARIABLES setup (QT_ANDROID_THEME, DPI, etc.)
         // TODO exportMap initialization (if still required)
 
+
         //setContentView(R.layout.activity_main);
+
+        // Find the toolbar view inside the activity layout
+        Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        //setSupportActionBar(toolbar);
+
+        //setActionBar(toolbar);
 
     }
 
@@ -116,6 +133,87 @@ public class MyQtActivity extends QtActivity {
 
         // TODO Bluetooth CONNECT permission (SDK 31+)
         // TODO Fine location permission
+    }
+
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        final ViewGroup root = findViewById(android.R.id.content);
+
+        if (root == null || root.getChildCount() == 0) {
+            Log.e("OpenCPN", "Root view not ready");
+            return;
+        }
+
+        // Post to ensure Qt has fully attached its view hierarchy
+        root.post(() -> {
+
+            try {
+                Log.i("OpenCPN", "onPostCreate: restructuring layout");
+
+                // --- Step 1: Capture Qt view ---
+                View qtView = root.getChildAt(0);
+
+                if (qtView == null) {
+                    Log.e("OpenCPN", "Qt view not found");
+                    return;
+                }
+
+                Log.i("OpenCPN", "Qt view class: " + qtView.getClass().getName());
+
+                // --- Step 2: Remove Qt view from root ---
+                root.removeAllViews();
+
+                // --- Step 3: Create vertical container ---
+                LinearLayout container = new LinearLayout(this);
+                container.setOrientation(LinearLayout.VERTICAL);
+                container.setLayoutParams(new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                ));
+
+                // --- Step 4: Inflate toolbar layout ---
+                LayoutInflater inflater = LayoutInflater.from(this);
+                View toolbarLayout = inflater.inflate(R.layout.activity_main, container, false);
+
+                Toolbar toolbar = toolbarLayout.findViewById(R.id.my_toolbar);
+
+                if (toolbar != null) {
+                    toolbar.setTitle("OpenCPN");
+                    Log.i("OpenCPN", "Toolbar initialized");
+                } else {
+                    Log.e("OpenCPN", "Toolbar not found in layout");
+                }
+
+                // Ensure toolbar layout wraps content height
+                toolbarLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+
+                // --- Step 5: Configure Qt view to fill remaining space ---
+                LinearLayout.LayoutParams qtParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        0,
+                        1f   // fill remaining space
+                );
+                qtView.setLayoutParams(qtParams);
+
+                // --- Step 6: Assemble layout ---
+                container.addView(toolbarLayout);
+                container.addView(qtView);
+
+                // --- Step 7: Attach back to root ---
+                root.addView(container);
+
+                Log.i("OpenCPN", "Layout restructuring complete");
+
+            } catch (Exception e) {
+                Log.e("OpenCPN", "Error restructuring layout", e);
+            }
+        });
     }
 
     @Override

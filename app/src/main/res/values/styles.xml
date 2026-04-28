@@ -11,6 +11,9 @@
     <item name="android:textSize">18sp</item>
     <item name="android:indeterminateDrawable">@drawable/progressbar_custom</item>
     <item name="android:dropDownListViewStyle">@style/PopupMenuListView</item>
+    <item name="windowActionBar">false</item>
+    <item name="android:windowActionBar">false</item>
+    <item name="windowNoTitle">true</item>
 </style>
 
     <!-- Change Overflow Menu ListView Divider Property -->
@@ -20,11 +23,15 @@
 </style>
 
 
+<style name="NoActionBartest" parent="@android:style/Theme.Holo.NoActionBar">
+        <!-- Inherits the Holo theme with no action bar; no other styles needed. -->
+ </style>
 
 
 
 
-<style name="CustomAlertDialogStyle">
+
+    <style name="CustomAlertDialogStyle">
     <item name="android:bottomBright">@color/transparent</item>
     <item name="android:bottomDark">@color/transparent</item>
     <item name="android:bottomMedium">@color/transparent</item>

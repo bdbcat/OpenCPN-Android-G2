@@ -7,14 +7,15 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.util.TypedValue;
 
-import androidx.appcompat.widget.Toolbar;
+//import androidx.appcompat.widget.Toolbar;
+import android.widget.Toolbar;
 
 import org.opencpn.opencpn.R;
 
 public class ToolbarController {
 
     private final Activity activity;
-    private Toolbar toolbar;
+    public Toolbar toolbar;
     private final MenuController menuController;
     private boolean initialized = false;
 
@@ -71,31 +72,7 @@ public class ToolbarController {
 
         Log.i("TOOLBAR", "Toolbar height: " + toolbar.getHeight());
 
-        toolbar.post(() -> {
-            Log.i("TOOLBAR", "Height after layout: " + toolbar.getHeight());
 
-            //ViewGroup root = (ViewGroup) getWindow().getDecorView();
-
-            android.widget.TextView probe = new android.widget.TextView(activity);
-            probe.setText("Z-PROBE");
-            probe.setTextSize(20f);
-            probe.setBackgroundColor(0xCCFF0000); // red
-            probe.setTextColor(0xFFFFFFFF);
-
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    dpToPx(80),
-                    android.view.Gravity.TOP
-            );
-
-            probe.setLayoutParams(lp);
-            //root.addView(probe);
-
-// Try everything that should bring it on top
-            probe.bringToFront();
-            probe.setZ(1000f);
-            probe.setElevation(50f);
-        });
     }
 
     private int getStatusBarHeight() {
