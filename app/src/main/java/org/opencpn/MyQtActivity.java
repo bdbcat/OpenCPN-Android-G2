@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -35,6 +37,7 @@ public class MyQtActivity extends QtActivity {
     private boolean m_trackContinuous;
     private boolean m_inExit = false;
     private static NativeBridgeManager sNativeBridge;
+    private OCPNNativeLib nativeLib;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,6 +63,7 @@ public class MyQtActivity extends QtActivity {
 
         // --- Native library dir ---
         initNativeLibraryDir();
+        nativeLib = OCPNNativeLib.getInstance();
 
         // --- Android services ---
         connectivity.init();
@@ -357,6 +361,61 @@ public class MyQtActivity extends QtActivity {
         });
     }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        Log.i("OpenCPN", "onConfigurationChanged");
+
+        // Defer until layout stabilizes
+        final View root = findViewById(android.R.id.content);
+
+        root.post(() -> handlePostRotationLayout());
+    }
+
+    private void handlePostRotationLayout() {
+
+        final View root = findViewById(android.R.id.content);
+
+        root.getViewTreeObserver().addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+
+                    @Override
+                    public void onGlobalLayout() {
+
+                        int width = root.getWidth();
+                        int height = root.getHeight();
+
+                        if (width == 0 || height == 0) {
+                            return; // still not ready
+                        }
+
+                        Log.i("OpenCPN", "FINAL layout size: " + width + "x" + height);
+
+                        // Remove listener (VERY important)
+                        root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                        int toolbarHeight = 0;
+                        View toolbar = findViewById(R.id.my_toolbar);
+                        if (toolbar != null) {
+                            toolbarHeight = toolbar.getHeight();
+                        }
+
+                        dispatchRotationToNative(width, height, toolbarHeight);
+                    }
+                }
+        );
+    }
+
+    private void dispatchRotationToNative(int w, int h, int toolbarHeight) {
+
+        Log.i("OpenCPN", "Dispatch rotation: " + w + "x" + h +
+                " toolbar=" + toolbarHeight);
+
+        if (nativeLib != null) {
+            nativeLib.onScreenResized(w, h, toolbarHeight);
+        }
+    }
 
     // JNI methods, redirecting to appropriate controllers
 

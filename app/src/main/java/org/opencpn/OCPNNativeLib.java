@@ -62,4 +62,6 @@ public class OCPNNativeLib {
   public native int onSoundDone(long androidSoundPtr);
 
   public native void ImportTmpGPX(String filePath, boolean isLayer, boolean isPersistent);
+
+  public native void onScreenResized(int w, int h, int toolbarHeight);
 }
