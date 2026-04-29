@@ -95,16 +95,6 @@ public class MyQtActivity extends QtActivity {
         // TODO exportMap initialization (if still required)
 
 
-        //setContentView(R.layout.activity_main);
-
-        // Find the toolbar view inside the activity layout
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        // Sets the Toolbar to act as the ActionBar for this Activity window.
-        // Make sure the toolbar exists in the activity and is not null
-        //setSupportActionBar(toolbar);
-
-        //setActionBar(toolbar);
-
     }
 
     private void initNativeLibraryDir() {
@@ -142,8 +132,8 @@ public class MyQtActivity extends QtActivity {
     }
 
 
-    //@Override
-    protected void xonPostCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
         final ViewGroup root = findViewById(android.R.id.content);
@@ -250,7 +240,7 @@ public class MyQtActivity extends QtActivity {
         super.onResume();
 
         if (toolbarController != null) {
-            //toolbarController.init();
+            toolbarController.init();
         }
 
         //hostManager.initInsetsListener();
@@ -392,20 +382,14 @@ public class MyQtActivity extends QtActivity {
                             return; // still not ready
                         }
 
-                        //Log.i("OpenCPN", "FINAL layout size: " + width + "x" + height);
 
                         // Remove listener (VERY important)
                         root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
 
-                        //int toolbarHeight = 0;
-                        //View toolbar = findViewById(R.id.my_toolbar);
-                        //if (toolbar != null) {
-                        //    toolbarHeight = toolbar.getHeight();
-                        //}
 
-                        //dispatchRotationToNative(width, height, toolbarHeight);
-// Second defer — allows Qt/Surface to settle
+;
+                        // Second defer — allows Qt/Surface to settle
                         root.post(() -> {
 
                             int finalWidth = root.getWidth();
@@ -510,23 +494,12 @@ public class MyQtActivity extends QtActivity {
 
     public String DisableRotation() {
         hostManager.lockActivityOrientation(this);
-        getWindow().getDecorView().setAlpha(0.5f);
         return "OK";
     }
 
     public String EnableRotation() {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-        ViewGroup rootx = findViewById(android.R.id.content);
-
-        View qtView = rootx.getChildAt(0);
-        int w = qtView.getWidth();
-        int h = qtView.getHeight();
-
-        qtView.getLayoutParams().width  = MATCH_PARENT;
-        qtView.getLayoutParams().height = MATCH_PARENT;
-        //qtView.requestLayout();
-
-        return "OK";
+          return "OK";
     }
 
 
