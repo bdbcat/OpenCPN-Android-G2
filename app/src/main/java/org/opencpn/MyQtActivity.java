@@ -1,5 +1,7 @@
 package org.opencpn;
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+
 import android.Manifest;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -96,7 +98,7 @@ public class MyQtActivity extends QtActivity {
         //setContentView(R.layout.activity_main);
 
         // Find the toolbar view inside the activity layout
-        Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
+        //Toolbar toolbar = (Toolbar) findViewById(R.id.my_toolbar);
         // Sets the Toolbar to act as the ActionBar for this Activity window.
         // Make sure the toolbar exists in the activity and is not null
         //setSupportActionBar(toolbar);
@@ -140,8 +142,8 @@ public class MyQtActivity extends QtActivity {
     }
 
 
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
+    //@Override
+    protected void xonPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
 
         final ViewGroup root = findViewById(android.R.id.content);
@@ -174,8 +176,8 @@ public class MyQtActivity extends QtActivity {
                 LinearLayout container = new LinearLayout(this);
                 container.setOrientation(LinearLayout.VERTICAL);
                 container.setLayoutParams(new FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
+                        MATCH_PARENT,
+                        MATCH_PARENT
                 ));
 
                 // --- Step 4: Inflate toolbar layout ---
@@ -193,13 +195,13 @@ public class MyQtActivity extends QtActivity {
 
                 // Ensure toolbar layout wraps content height
                 toolbarLayout.setLayoutParams(new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        MATCH_PARENT,
                         ViewGroup.LayoutParams.WRAP_CONTENT
                 ));
 
                 // --- Step 5: Configure Qt view to fill remaining space ---
                 LinearLayout.LayoutParams qtParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        MATCH_PARENT,
                         0,
                         1f   // fill remaining space
                 );
@@ -248,7 +250,7 @@ public class MyQtActivity extends QtActivity {
         super.onResume();
 
         if (toolbarController != null) {
-            toolbarController.init();
+            //toolbarController.init();
         }
 
         //hostManager.initInsetsListener();
@@ -390,18 +392,50 @@ public class MyQtActivity extends QtActivity {
                             return; // still not ready
                         }
 
-                        Log.i("OpenCPN", "FINAL layout size: " + width + "x" + height);
+                        //Log.i("OpenCPN", "FINAL layout size: " + width + "x" + height);
 
                         // Remove listener (VERY important)
                         root.getViewTreeObserver().removeOnGlobalLayoutListener(this);
 
-                        int toolbarHeight = 0;
-                        View toolbar = findViewById(R.id.my_toolbar);
-                        if (toolbar != null) {
-                            toolbarHeight = toolbar.getHeight();
-                        }
 
-                        dispatchRotationToNative(width, height, toolbarHeight);
+                        //int toolbarHeight = 0;
+                        //View toolbar = findViewById(R.id.my_toolbar);
+                        //if (toolbar != null) {
+                        //    toolbarHeight = toolbar.getHeight();
+                        //}
+
+                        //dispatchRotationToNative(width, height, toolbarHeight);
+// Second defer — allows Qt/Surface to settle
+                        root.post(() -> {
+
+                            int finalWidth = root.getWidth();
+                            int finalHeight = root.getHeight();
+
+                            Log.i("OpenCPN",
+                                    "FINAL layout size: "
+                                            + finalWidth + "x" + finalHeight);
+
+                            int toolbarHeight = 0;
+
+                            View toolbar = findViewById(R.id.my_toolbar);
+
+                            if (toolbar != null) {
+                                toolbarHeight = toolbar.getHeight();
+                            }
+
+                            ViewGroup rootx = findViewById(android.R.id.content);
+
+                            View qtView = rootx.getChildAt(0);
+                            qtView.getLayoutParams().width  = MATCH_PARENT;
+                            qtView.getLayoutParams().height = MATCH_PARENT;
+                            qtView.requestLayout();
+
+                            dispatchRotationToNative(
+                                    finalWidth,
+                                    finalHeight,
+                                    toolbarHeight);
+                        });
+
                     }
                 }
         );
@@ -482,6 +516,16 @@ public class MyQtActivity extends QtActivity {
 
     public String EnableRotation() {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        ViewGroup rootx = findViewById(android.R.id.content);
+
+        View qtView = rootx.getChildAt(0);
+        int w = qtView.getWidth();
+        int h = qtView.getHeight();
+
+        qtView.getLayoutParams().width  = MATCH_PARENT;
+        qtView.getLayoutParams().height = MATCH_PARENT;
+        //qtView.requestLayout();
+
         return "OK";
     }
 
