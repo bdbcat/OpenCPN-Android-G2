@@ -38,7 +38,7 @@ public class MyQtActivity extends QtActivity {
     private String m_nativeLibraryDir;
     private boolean m_trackContinuous;
     private boolean m_inExit = false;
-    private static NativeBridgeManager sNativeBridge;
+    public static NativeBridgeManager sNativeBridge;
     private OCPNNativeLib nativeLib;
 
     @Override
@@ -55,7 +55,10 @@ public class MyQtActivity extends QtActivity {
         menuController = new MenuController(this);
         toolbarController = new ToolbarController(this, menuController);
 
-        // --- Bridge Init ---
+        // Initialize the JNI bridge
+        AndroidBridge.initialize(hostManager, toolbarController, connectivity, this);
+
+         // --- OpenCPNBridge Init ---
         OpenCPNBridge.init(this);
         OpenCPNBridge.getInstance(this).onCreate(getIntent());
 
@@ -437,71 +440,25 @@ public class MyQtActivity extends QtActivity {
 
     // JNI methods, redirecting to appropriate controllers
 
-    public static void notifyQtReady() {
-        if (sNativeBridge != null) {
-            sNativeBridge.setQtReady();
-        }
-    }
-
-    public String getDisplayMetrics() {
-        return hostManager.getDisplayMetrics();
-    }
-
-    public String getDeviceInfo() {
-        return hostManager.getDeviceInfo();
-    }
-
-    public String getSystemDirsAndroid() {
-        return hostManager.getSystemDirs();
-    }
-
-    public String getAndroidLocaleString() {
-        return hostManager.getAndroidLocaleString();
-    }
-
-    public String getAndroidVersionCode() {
-        return hostManager.getAndroidVersionCode();
-    }
 
     //TODO implement in "files" module
     private String RemoveSystemFile(String filename) {
         //File f = new File(filename);
         //f.delete();
         return "OK";
+
     }
 
-    public String getScreenOrientation() {
-        return hostManager.getScreenOrientation();
-    }
 
     public String disclaimerDialog(final String title, final String message) {
         return hostManager.disclaimerDialog(title, message);
 
     }
 
-    public String getIpAddress() {
-        return connectivity.getIpAddress();
-    }
-
-    public String hasBluetooth(int parm) {
-        return connectivity.hasBluetooth(parm);
-    }
-
-    //TODO Implement this
+  //TODO Implement this
     public String configureNavSpinnerTS(int flag, int sel) {
         return "OK";
     }
-
-    public String DisableRotation() {
-        hostManager.lockActivityOrientation(this);
-        return "OK";
-    }
-
-    public String EnableRotation() {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
-          return "OK";
-    }
-
 
 
 }

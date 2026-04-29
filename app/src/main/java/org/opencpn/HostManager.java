@@ -430,8 +430,13 @@ public class HostManager {
         root.requestApplyInsets();
     }
 
+    
     public int getEffectiveTopInset() {
         int toolbarHeight = 400; //getToolbarHeight(); // from ToolbarController
         return insetTop + toolbarHeight;
+    }
+
+    public Activity getActivity() {
+        return activity;
     }
 }
