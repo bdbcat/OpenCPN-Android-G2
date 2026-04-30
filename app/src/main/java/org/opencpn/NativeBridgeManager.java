@@ -5,6 +5,8 @@ import java.util.List;
 import android.os.Handler;
 import android.os.Looper;
 
+import org.json.JSONObject;
+
 public class NativeBridgeManager {
 
     enum LifecycleState {
@@ -28,31 +30,88 @@ public class NativeBridgeManager {
         nativeLib = OCPNNativeLib.getInstance();
     }
 
+
+    //  Helper functions
+    public static String makeEvent(String event) {
+
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("event", event);
+            return obj.toString();
+        } catch(Exception e) {
+            return "{}";
+        }
+    }
+
+
+
+    public void postEvent(Runnable r) {
+        runOrQueue(r);
+    }
+
+    public void postJsonEvent(String payload) {
+        runOrQueue(() -> nativeLib.postJsonEvent(payload));
+    }
+
+    public static String makeEvent(
+            String event,
+            String key1,
+            Object value1)
+    {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("event", event);
+            obj.put(key1, value1);
+            return obj.toString();
+        } catch(Exception e) {
+            return "{}";
+        }
+    }
+
+    public static String makeEvent(
+            String event,
+            String key1,
+            Object value1,
+            String key2,
+            Object value2)
+        {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("event", event);
+            obj.put(key1, value1);
+            obj.put(key2, value2);
+            return obj.toString();
+        } catch(Exception e) {
+            return "{}";
+        }
+    }
+
+
     // --- Public lifecycle API ---
 
     public void onStart() {
         lastState = LifecycleState.STARTED;
-        runOrQueue(() -> nativeLib.onStart());
+        postJsonEvent(makeEvent("onStart"));
     }
 
     public void onResume() {
         lastState = LifecycleState.RESUMED;
-        runOrQueue(() -> nativeLib.onResume());
+        postJsonEvent(makeEvent("onResume"));
     }
 
     public void onPause() {
         lastState = LifecycleState.PAUSED;
-        runOrQueue(() -> nativeLib.onPause());
+        postJsonEvent(makeEvent("onPause"));
     }
 
     public void onStop() {
         lastState = LifecycleState.STOPPED;
-        runOrQueue(() -> nativeLib.onStop());
+        postJsonEvent(makeEvent("onStop"));
     }
 
     public void onDestroy() {
         lastState = LifecycleState.DESTROYED;
-        runOrQueue(() -> nativeLib.onDestroy());
+        postJsonEvent(makeEvent("onDestroy"));
     }
 
     // --- Core logic ---
@@ -75,14 +134,14 @@ public class NativeBridgeManager {
             }
             pendingCalls.clear();
 
-            syncToLatestState();
+            //syncToLatestState();
         });
     }
 
     private void syncToLatestState() {
         switch (lastState) {
             case RESUMED:
-                nativeLib.onStart();
+                //nativeLib.onStart();
                 nativeLib.onResume();
                 break;
 

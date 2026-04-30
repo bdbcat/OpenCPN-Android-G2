@@ -64,4 +64,6 @@ public class OCPNNativeLib {
   public native void ImportTmpGPX(String filePath, boolean isLayer, boolean isPersistent);
 
   public native void onScreenResized(int w, int h, int toolbarHeight);
+
+  public native void postJsonEvent(String payload);
 }

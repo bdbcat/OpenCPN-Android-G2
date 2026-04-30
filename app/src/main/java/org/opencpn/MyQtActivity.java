@@ -19,6 +19,7 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.Toast;
 import android.widget.Toolbar;
 
 //import androidx.appcompat.widget.Toolbar;
@@ -243,7 +244,7 @@ public class MyQtActivity extends QtActivity {
         super.onResume();
 
         if (toolbarController != null) {
-            toolbarController.init();
+            //toolbarController.init();
         }
 
         //hostManager.initInsetsListener();
@@ -458,6 +459,57 @@ public class MyQtActivity extends QtActivity {
   //TODO Implement this
     public String configureNavSpinnerTS(int flag, int sel) {
         return "OK";
+    }
+
+    // Private back-button handler
+
+    private static final long BACK_PRESS_INTERVAL_MS = 3000;
+    private long lastBackPressTime = 0;
+    private Toast toast;
+
+    boolean handleOCPNBackButton() {
+
+        long now = System.currentTimeMillis();
+
+        if ((now - lastBackPressTime) > BACK_PRESS_INTERVAL_MS) {
+
+            if (toast != null) {
+                toast.cancel();
+            }
+
+            toast = Toast.makeText(
+                    this,
+                    "Press back again to close OpenCPN",
+                    Toast.LENGTH_LONG);
+
+            toast.show();
+
+            lastBackPressTime = now;
+
+            return false;
+        }
+
+        if (toast != null) {
+            toast.cancel();
+        }
+
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (m_inExit)
+            return;
+
+        if (handleOCPNBackButton()) {
+            m_inExit = true;
+            preClose();
+            finish();
+        }
+    }
+
+    void preClose(){
+        nativeLib.ScheduleCleanExit();
     }
 
 
