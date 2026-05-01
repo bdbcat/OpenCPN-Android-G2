@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 import android.widget.Toolbar;
+import android.window.OnBackInvokedDispatcher;
 
 //import androidx.appcompat.widget.Toolbar;
 
@@ -98,7 +99,11 @@ public class MyQtActivity extends QtActivity {
         // TODO ENVIRONMENT_VARIABLES setup (QT_ANDROID_THEME, DPI, etc.)
         // TODO exportMap initialization (if still required)
 
-
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    this::handleBackPressedCommon);
+        }
     }
 
     private void initNativeLibraryDir() {
@@ -461,11 +466,25 @@ public class MyQtActivity extends QtActivity {
         return "OK";
     }
 
+    //---------------------------------------------------------------------------------------
     // Private back-button handler
 
     private static final long BACK_PRESS_INTERVAL_MS = 3000;
     private long lastBackPressTime = 0;
     private Toast toast;
+
+
+    private void handleBackPressedCommon() {
+
+        if (m_inExit)
+            return;
+
+        if (handleOCPNBackButton()) {
+            m_inExit = true;
+            preClose();
+            finish();
+        }
+    }
 
     boolean handleOCPNBackButton() {
 
@@ -498,15 +517,11 @@ public class MyQtActivity extends QtActivity {
 
     @Override
     public void onBackPressed() {
-        if (m_inExit)
+        if (Build.VERSION.SDK_INT >= 33) {  // handle by OnBackInvokedDispatcher
             return;
-
-        if (handleOCPNBackButton()) {
-            m_inExit = true;
-            preClose();
-            finish();
         }
-    }
+        handleBackPressedCommon();
+   }
 
     void preClose(){
         nativeLib.ScheduleCleanExit();
