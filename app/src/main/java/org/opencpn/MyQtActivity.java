@@ -3,6 +3,7 @@ package org.opencpn;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
@@ -42,6 +43,7 @@ public class MyQtActivity extends QtActivity {
     private boolean m_inExit = false;
     public static NativeBridgeManager sNativeBridge;
     private OCPNNativeLib nativeLib;
+    private FileController fileController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,9 +58,10 @@ public class MyQtActivity extends QtActivity {
         usb = new UsbController();
         menuController = new MenuController(this);
         toolbarController = new ToolbarController(this, menuController);
+        fileController = new FileController(this, OpenCPNBridge.getInstance(this), sNativeBridge);
 
         // Initialize the JNI bridge
-        AndroidBridge.initialize(hostManager, toolbarController, connectivity, this);
+        AndroidBridge.initialize(hostManager, toolbarController, connectivity, fileController,this);
 
          // --- OpenCPNBridge Init ---
         OpenCPNBridge.init(this);
@@ -527,5 +530,16 @@ public class MyQtActivity extends QtActivity {
         nativeLib.ScheduleCleanExit();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode,
+                                    int resultCode,
+                                    Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Dispatch cased on numeric range of requestCode
+        if ((requestCode >= 5000) && (resultCode < 6000)) {
+            fileController.safManager.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
 }

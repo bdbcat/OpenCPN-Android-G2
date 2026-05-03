@@ -7,13 +7,13 @@ import android.content.pm.ActivityInfo;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.checkerframework.checker.units.qual.A;
 import org.json.JSONObject;
 
 public class AndroidBridge {
     private static HostManager hostManager;
     private static ToolbarController toolbarController;
     private static ConnectivityHelper connectivityHelper;
+    private static FileController fileController;
 
     private static Activity activity;
 
@@ -21,11 +21,13 @@ public class AndroidBridge {
             HostManager hm,
             ToolbarController tc,
             ConnectivityHelper ch,
+            FileController fc,
             Activity act)
     {
         hostManager = hm;
         toolbarController = tc;
         connectivityHelper = ch;
+        fileController = fc;
         activity = act;
     }
 
@@ -178,6 +180,68 @@ public class AndroidBridge {
 
                     return result.toString();
                 }
+
+                //----------------------------------------------------------------
+                // File management
+
+                case "SECURE_COPY_FILE": {
+                    String in_file = obj.optString("in_file", "");
+                    String out_file = obj.optString("out_file", "");
+
+                    int seq = obj.optInt("seq", -1);
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.SecureFileCopy(in_file, out_file);;
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
+
+
+
+                case "ENSURE_TREE_ACCESS": {
+                    int seq = obj.optInt("seq", -1);
+                    String treeId = obj.optString("treeId", "");
+
+                    String aresult = fileController.ensureTreeAccess(seq, treeId);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+
+
+                }
+
+                case "FILE_CHOOSER": {
+                    String initialDir = obj.optString("initialDir", "");
+                    String title = obj.optString("title", "");
+                    String suggestion = obj.optString("suggestion", "");
+                    String wildcard = obj.optString("wildcard", "");
+
+
+                    int seq = obj.optInt("seq", -1);
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.fileChooserDialog(seq, initialDir, title, suggestion, wildcard);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
+
+
 
                 default: {
 

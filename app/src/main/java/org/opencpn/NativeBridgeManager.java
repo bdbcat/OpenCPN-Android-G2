@@ -31,87 +31,39 @@ public class NativeBridgeManager {
     }
 
 
-    //  Helper functions
-    public static String makeEvent(String event) {
-
-        try {
-            JSONObject obj = new JSONObject();
-            obj.put("event", event);
-            return obj.toString();
-        } catch(Exception e) {
-            return "{}";
-        }
-    }
-
-
-
-    public void postEvent(Runnable r) {
-        runOrQueue(r);
-    }
-
     public void postJsonEvent(String payload) {
         runOrQueue(() -> nativeLib.postJsonEvent(payload));
     }
 
-    public static String makeEvent(
-            String event,
-            String key1,
-            Object value1)
-    {
-        try {
-            JSONObject obj = new JSONObject();
-            obj.put("event", event);
-            obj.put(key1, value1);
-            return obj.toString();
-        } catch(Exception e) {
-            return "{}";
-        }
-    }
-
-    public static String makeEvent(
-            String event,
-            String key1,
-            Object value1,
-            String key2,
-            Object value2)
-        {
-        try {
-            JSONObject obj = new JSONObject();
-            obj.put("event", event);
-            obj.put(key1, value1);
-            obj.put(key2, value2);
-            return obj.toString();
-        } catch(Exception e) {
-            return "{}";
-        }
-    }
 
 
+
+    // ----------------------------------------------------------------------------------
     // --- Public lifecycle API ---
 
     public void onStart() {
         lastState = LifecycleState.STARTED;
-        postJsonEvent(makeEvent("onStart"));
+        postJsonEvent(JSONHelpers.makeEvent(0,"onStart"));
     }
 
     public void onResume() {
         lastState = LifecycleState.RESUMED;
-        postJsonEvent(makeEvent("onResume"));
+        postJsonEvent(JSONHelpers.makeEvent(0,"onResume"));
     }
 
     public void onPause() {
         lastState = LifecycleState.PAUSED;
-        postJsonEvent(makeEvent("onPause"));
+        postJsonEvent(JSONHelpers.makeEvent(0,"onPause"));
     }
 
     public void onStop() {
         lastState = LifecycleState.STOPPED;
-        postJsonEvent(makeEvent("onStop"));
+        postJsonEvent(JSONHelpers.makeEvent(0, "onStop"));
     }
 
     public void onDestroy() {
         lastState = LifecycleState.DESTROYED;
-        postJsonEvent(makeEvent("onDestroy"));
+        postJsonEvent(JSONHelpers.makeEvent(0,"onDestroy"));
     }
 
     // --- Core logic ---
