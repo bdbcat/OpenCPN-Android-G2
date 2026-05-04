@@ -17,6 +17,7 @@ public class AndroidBridge {
     private static OCPNConnectivityManager connectivityManager;
 
     private static Activity activity;
+    private static DownloadManager downloadManager;
 
     public static void initialize(
             HostManager hm,
@@ -24,6 +25,7 @@ public class AndroidBridge {
             ConnectivityHelper ch,
             FileController fc,
             OCPNConnectivityManager cm,
+            DownloadManager dm,
             Activity act)
     {
         hostManager = hm;
@@ -31,6 +33,7 @@ public class AndroidBridge {
         connectivityHelper = ch;
         fileController = fc;
         connectivityManager = cm;
+        downloadManager = dm;
         activity = act;
     }
 
@@ -252,9 +255,21 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", aresult);
                     return result.toString();
-
-
                 }
+
+                case "DOWNLOAD_FILE": {
+                    int seq = obj.optInt("seq", -1);
+                    String url = obj.optString("in_url", "");
+                    String destination = obj.optString("out_file", "");
+
+                    String aresult = downloadManager.downloadFile(url, destination);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
+
 
 
                 default: {

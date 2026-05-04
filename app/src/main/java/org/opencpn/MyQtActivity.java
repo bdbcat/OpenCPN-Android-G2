@@ -52,6 +52,7 @@ public class MyQtActivity extends QtActivity {
     private FileController fileController;
     private OCPNConnectivityManager connectivityManager;
     public boolean m_hasGPS = false;
+    private DownloadManager downloadManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -69,10 +70,11 @@ public class MyQtActivity extends QtActivity {
         menuController = new MenuController(this);
         toolbarController = new ToolbarController(this, menuController);
         fileController = new FileController(this, OpenCPNBridge.getInstance(this), sNativeBridge);
-
+        downloadManager = new DownloadManager();
+        
         // Initialize the JNI bridge
         AndroidBridge.initialize(hostManager, toolbarController, connectivity,
-                fileController, connectivityManager, this);
+                fileController, connectivityManager, downloadManager, this);
 
          // --- Native library dir ---
         initNativeLibraryDir();
@@ -82,9 +84,11 @@ public class MyQtActivity extends QtActivity {
         connectivityManager.init(this);
         connectivity.init();
 
+        downloadManager.init(this, nativeLib);
+
         // Initialize the JNI bridge
         AndroidBridge.initialize(hostManager, toolbarController, connectivity,
-                fileController, connectivityManager, this);
+                fileController, connectivityManager, downloadManager, this);
 
         // --- OpenCPNBridge Init ---
         OpenCPNBridge.init(this);

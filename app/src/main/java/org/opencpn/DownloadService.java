@@ -232,6 +232,17 @@ public class DownloadService extends IntentService {
             else{
                 Log.i("OpenCPN", "DownloadService: later than KitKat");
 
+                Bundle resultData0 = new Bundle();
+
+                int progress = (int) (total * 100 / fileLength);
+                resultData0.putInt("progress" , 0);
+                resultData0.putInt("sofar" , 0);
+                resultData0.putInt("filelength" , 100);
+
+
+                receiver.send(UPDATE_PROGRESS, resultData0);
+
+
                 URLConnection connection = url.openConnection();
                 connection.connect();
 
