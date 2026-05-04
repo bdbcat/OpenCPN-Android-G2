@@ -28,8 +28,14 @@ import android.window.OnBackInvokedDispatcher;
 
 import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.bindings.QtActivity;
+import org.opencpn.OCPNConnectivityManager;
 
 public class MyQtActivity extends QtActivity {
+
+    // Definitions
+    public final static int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
+    public final static int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 2;
+    public final static int MY_PERMISSIONS_REQUEST_BT_CONNECT = 3;
 
     private NativeBridgeManager nativeBridge;
     private PreferencesManager preferences;
@@ -44,6 +50,8 @@ public class MyQtActivity extends QtActivity {
     public static NativeBridgeManager sNativeBridge;
     private OCPNNativeLib nativeLib;
     private FileController fileController;
+    private OCPNConnectivityManager connectivityManager;
+    public boolean m_hasGPS = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,31 +63,40 @@ public class MyQtActivity extends QtActivity {
         sNativeBridge = nativeBridge;
         preferences = new PreferencesManager(this);
         connectivity = new ConnectivityHelper(this);
+        connectivityManager = new OCPNConnectivityManager(this);
+
         usb = new UsbController();
         menuController = new MenuController(this);
         toolbarController = new ToolbarController(this, menuController);
         fileController = new FileController(this, OpenCPNBridge.getInstance(this), sNativeBridge);
 
         // Initialize the JNI bridge
-        AndroidBridge.initialize(hostManager, toolbarController, connectivity, fileController,this);
+        AndroidBridge.initialize(hostManager, toolbarController, connectivity,
+                fileController, connectivityManager, this);
 
-         // --- OpenCPNBridge Init ---
+         // --- Native library dir ---
+        initNativeLibraryDir();
+        nativeLib = OCPNNativeLib.getInstance();
+
+        // --- Android Location services ---
+        connectivityManager.init(this);
+        connectivity.init();
+
+        // Initialize the JNI bridge
+        AndroidBridge.initialize(hostManager, toolbarController, connectivity,
+                fileController, connectivityManager, this);
+
+        // --- OpenCPNBridge Init ---
         OpenCPNBridge.init(this);
         OpenCPNBridge.getInstance(this).onCreate(getIntent());
 
         OpenCPNBridge.getInstance(this).initFilesystem();
 
-        // TODO Some legacy onCreate tasks may move fully into OpenCPNBridge
-
-        // --- Native library dir ---
-        initNativeLibraryDir();
-        nativeLib = OCPNNativeLib.getInstance();
-
-        // --- Android services ---
-        connectivity.init();
-
         // TODO registerNetworkCallback() (API >= 24)
         // TODO register locale change receiver
+
+        PackageManager packMan = getPackageManager();
+        m_hasGPS = packMan.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
 
         // --- Preferences ---
         m_trackContinuous = preferences.applyWindowFlags(this);
@@ -541,5 +558,49 @@ public class MyQtActivity extends QtActivity {
             fileController.safManager.onActivityResult(requestCode, resultCode, data);
         }
     }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.i("OpenCPN", "onRequestPermissionsResult");
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
+                connectivityManager.handlePermissionResults(requestCode, permissions, grantResults);
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // task you need to do.
+                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_WRITE_STORAGE permission granted");
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_WRITE_STORAGE permission denied");
+                }
+                return;
+            }
+            case MY_PERMISSIONS_REQUEST_BT_CONNECT: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // task you need to do.
+                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_BT_CONNECT permission granted");
+
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_BT_CONNECT permission denied");
+                }
+                return;
+            }
+        }
+    }
+
 
 }

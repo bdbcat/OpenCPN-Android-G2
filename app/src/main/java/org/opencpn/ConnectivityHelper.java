@@ -1,6 +1,7 @@
 package org.opencpn;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -29,9 +30,17 @@ public class ConnectivityHelper {
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
             // TODO registerNetworkCallback()
+
+
         }
 
         // TODO acquire multicast lock if needed
+
+        // Establish GPS Service and listeners
+
+
+
+
     }
 
     public void cleanup() {

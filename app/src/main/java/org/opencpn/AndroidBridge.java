@@ -14,6 +14,7 @@ public class AndroidBridge {
     private static ToolbarController toolbarController;
     private static ConnectivityHelper connectivityHelper;
     private static FileController fileController;
+    private static OCPNConnectivityManager connectivityManager;
 
     private static Activity activity;
 
@@ -22,12 +23,14 @@ public class AndroidBridge {
             ToolbarController tc,
             ConnectivityHelper ch,
             FileController fc,
+            OCPNConnectivityManager cm,
             Activity act)
     {
         hostManager = hm;
         toolbarController = tc;
         connectivityHelper = ch;
         fileController = fc;
+        connectivityManager = cm;
         activity = act;
     }
 
@@ -215,8 +218,6 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", aresult);
                     return result.toString();
-
-
                 }
 
                 case "FILE_CHOOSER": {
@@ -241,6 +242,19 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                case "QUERY_GPS_SERVICE": {
+                    int seq = obj.optInt("seq", -1);
+                    int server_cmd = obj.optInt("query_code", -1);
+
+                    String aresult = connectivityManager.handleGPSServerCommand(server_cmd);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+
+
+                }
 
 
                 default: {
