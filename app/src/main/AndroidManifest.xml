@@ -23,7 +23,7 @@
             android:launchMode="singleTask"
             android:exported="true"
             android:enableOnBackInvokedCallback="true"
-            android:theme="@style/MyTheme">
+            android:theme="@style/OpenCPNTheme">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

@@ -84,4 +84,14 @@
         <item name="android:textColor">#FFFFFF</item>
     </style>
 
+
+        <style name="OpenCPNTheme"
+            parent="@android:style/Theme.Holo.Light.NoActionBar">
+
+            <item name="android:windowNoTitle">false</item>
+            <item name="android:windowActionBar">true</item>
+
+        </style>
+
+
 </resources>

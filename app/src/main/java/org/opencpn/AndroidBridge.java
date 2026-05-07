@@ -18,10 +18,11 @@ public class AndroidBridge {
 
     private static Activity activity;
     private static DownloadManager downloadManager;
+    private static MenuController menuController;
 
     public static void initialize(
             HostManager hm,
-            ToolbarController tc,
+            MenuController mc,
             ConnectivityHelper ch,
             FileController fc,
             OCPNConnectivityManager cm,
@@ -29,7 +30,7 @@ public class AndroidBridge {
             Activity act)
     {
         hostManager = hm;
-        toolbarController = tc;
+        menuController = mc;
         connectivityHelper = ch;
         fileController = fc;
         connectivityManager = cm;
@@ -123,6 +124,16 @@ public class AndroidBridge {
 
                 case "GET_VERSION_CODE": {
                     String aresult = hostManager.getAndroidVersionCode();
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+
+                    return result.toString();
+                }
+
+                case "GET_VERSION_NAME": {
+                    String aresult = hostManager.getAndroidVersionName();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -270,6 +281,29 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                case "SET_FOLLOW_ICON_STATE": {
+                    int seq = obj.optInt("seq", -1);
+                    int icon_state = obj.optInt("icon_state", 0);
+
+                    String aresult = menuController.setFollowIconState(icon_state);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
+
+                case "SET_TRACKING_ICON_STATE": {
+                    int seq = obj.optInt("seq", -1);
+                    int icon_state = obj.optInt("icon_state", 0);
+
+                    String aresult = menuController.setTrackingIconState(icon_state);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
 
 
                 default: {

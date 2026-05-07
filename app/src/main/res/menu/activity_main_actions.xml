@@ -5,7 +5,7 @@
     <item android:id="@+id/ocpn_action_follow"
           android:icon="@drawable/follow"
           android:title="@string/ocpn_action_follow"
-          ocpn:showAsAction="ifRoom"/>
+          android:showAsAction="always"/>
 
     <item android:id="@+id/ocpn_action_follow_active"
           android:icon="@drawable/follow_active"

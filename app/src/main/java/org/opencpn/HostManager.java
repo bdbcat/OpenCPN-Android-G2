@@ -304,6 +304,16 @@ public class HostManager {
         }
     }
 
+    public String getAndroidVersionName() {
+        try {
+            PackageInfo pInfo = activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0);
+            String rv = pInfo.versionName;;
+            return rv;
+        } catch (PackageManager.NameNotFoundException e) {
+            return "0";
+        }
+    }
+
     public String getScreenOrientation() {
         Configuration c = activity.getResources().getConfiguration();
         int orient = c.orientation;

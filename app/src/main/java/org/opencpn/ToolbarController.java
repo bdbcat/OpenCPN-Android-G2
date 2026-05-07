@@ -9,7 +9,7 @@ import android.util.TypedValue;
 
 //import androidx.appcompat.widget.Toolbar;
 import android.widget.Toolbar;
-
+//import androidx.appcompat.widget.Toolbar;
 import org.opencpn.opencpn.R;
 
 public class ToolbarController {
@@ -18,6 +18,14 @@ public class ToolbarController {
     public Toolbar toolbar;
     private final MenuController menuController;
     private boolean initialized = false;
+
+    class ToolbarState {
+        boolean trackActive;
+        int followState;
+        boolean routeAnnunciatorVisible;
+    }
+    private ToolbarState toolbarState;
+
 
     public ToolbarController(Activity activity, MenuController menuController) {
         this.activity = activity;
@@ -45,7 +53,7 @@ public class ToolbarController {
         toolbar.setBackgroundColor(0xAA222222);   // semi-transparent
         toolbar.setBackgroundColor(0xFFFF0000);
 
-        toolbar.setTitle("OpenCPN"); // optional
+        //toolbar.setTitle("OpenCPN"); // optional
 
         root.addView(toolbar);
         toolbar.bringToFront();
@@ -68,6 +76,12 @@ public class ToolbarController {
             return insets;
         });
 
+
+        toolbarState = new ToolbarState();
+        toolbarState.trackActive = false;
+        toolbarState.followState = 1;
+        toolbarState.routeAnnunciatorVisible = false;
+
         setupMenu();
 
         Log.i("TOOLBAR", "Toolbar height: " + toolbar.getHeight());
@@ -85,7 +99,11 @@ public class ToolbarController {
         return 0;
     }
     private void setupMenu() {
-        toolbar.inflateMenu(R.menu.main_menu);
+/*
+        //toolbar.inflateMenu(R.menu.activity_main_actions);
+        //toolbar.getMenu().configureMenu(getMenu());
+        menuController.configureMenu(toolbar.getMenu(), toolbarState);
+
         int s =  toolbar.getMenu().size();
 
         Log.i("MENU", "Menu size: " + toolbar.getMenu().size());
@@ -93,6 +111,8 @@ public class ToolbarController {
         toolbar.setOnMenuItemClickListener(item ->
                 menuController.handle(item)
         );
+
+ */
     }
 
     private int dpToPx(int dp) {
