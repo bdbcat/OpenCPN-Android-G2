@@ -256,6 +256,63 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+ //                public String privateDirChooserDialog(final int seq, final String initialDir, final String Title, final int addFile) {
+
+                case "PRIVATE_DIR_CHOOSER_ASYNC": {
+                    String initialDir = obj.optString("initialDir", "");
+                    String title = obj.optString("title", "");
+                    String addFile = obj.optString("addFile", "");
+
+                    int seq = obj.optInt("seq", -1);
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.privateDirChooserDialogAsync(seq, initialDir, title, addFile);
+
+                    String payload_t = aresult;
+                    if (aresult.startsWith("cancel"))
+                        payload_t = "";
+                    if (aresult.startsWith("exception"))
+                        payload_t = "";
+
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", payload_t);
+                    return result.toString();
+                }
+
+                case "PRIVATE_FILE_CHOOSER_ASYNC": {
+                    String initialDir = obj.optString("initialDir", "");
+                    String title = obj.optString("title", "");
+                    String addFile = obj.optString("addFile", "");
+
+                    int seq = obj.optInt("seq", -1);
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.privateFileChooserDialogAsync(seq, initialDir, title, addFile);
+
+                    String payload_t = aresult;
+                    if (aresult.startsWith("cancel"))
+                        payload_t = "";
+                    if (aresult.startsWith("exception"))
+                        payload_t = "";
+
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", payload_t);
+                    return result.toString();
+                }
+
+
                 case "QUERY_GPS_SERVICE": {
                     int seq = obj.optInt("seq", -1);
                     int server_cmd = obj.optInt("query_code", -1);

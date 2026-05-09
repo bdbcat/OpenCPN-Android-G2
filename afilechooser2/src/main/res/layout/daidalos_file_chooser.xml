@@ -6,7 +6,7 @@
     android:gravity="top"
     android:orientation="vertical"
     android:scrollbars="vertical"
-    android:padding="?dialogPreferredPadding"
+    android:padding="2dp"
     android:fitsSystemWindows="true">
 
 

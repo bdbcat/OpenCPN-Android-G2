@@ -1,13 +1,16 @@
 package org.opencpn;
 
 
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriPermission;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
 
@@ -18,9 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
+import ar.com.daidalos.afiledialog.*;
 
 public class FileController {
+
 
     public static final String PREF_CHOOSER_WILD_CARD = "PREF_CHOOSER_WILD_CARD";
 
@@ -187,7 +193,377 @@ public class FileController {
         }
     }
 
+    //--------------------------------------------------------------------------------------
+    //  Directory chooser dialog for local sandbox directories
+    //  Async version
+    //--------------------------------------------------------------------------------------
+    public String privateDirChooserDialogAsync(final int seq, final String initialDir, final String Title, final String addFile) {
 
+        String dirStart = initialDir;
+        if (dirStart.isEmpty())
+            dirStart = activity.getExternalFilesDir(null).getPath();
+
+        final String dirThreadStart = dirStart;
+
+        Log.i("OpenCPN", "localDirChooserDialog create and show " + dirThreadStart);
+
+       activity.runOnUiThread(() -> {
+
+            final FileChooserDialog dialog =
+                    new FileChooserDialog(
+                            activity,
+                            dirThreadStart);
+
+                        dialog.setShowFullPath(true);
+                        dialog.setFolderMode(true);
+                        boolean baddfile = false;
+                        if (addFile.startsWith("true")) baddfile = true;
+                        dialog.setFolderMode(true);
+                        dialog.setCanCreateFiles(baddfile);
+                        dialog.setTitle(Title);
+
+                        dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
+                            public void onFileSelected(Dialog source, File file) {
+                                source.hide();
+                                String fileName = file.getAbsolutePath();
+                                nativeBridge.postJsonEvent(
+                                        JSONHelpers.makeEvent(seq,
+                                                "privateDirSelected",
+                                                "dirName", fileName,
+                                               "action", "select"));
+
+                            }
+
+                            public void onFileSelected(Dialog source, File folder, String name) {
+                                //Log.i("OpenCPN", "Activity onFileSelectedB: " + folder.getPath() +  File.separator + name);
+
+                                File newFolder = new File(folder.getPath() + File.separator + name);
+                                boolean success = true;
+                                if (!newFolder.exists())
+                                    success = newFolder.mkdirs();
+
+                                if (!success) {
+                                    Toast toast = Toast.makeText(source.getContext(), "Could not create file in: " + folder.getPath(), Toast.LENGTH_LONG);
+                                    toast.show();
+                                }
+
+                                dialog.loadFolder(folder.getPath());
+                            }
+
+                        });
+
+                        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            public void onCancel(DialogInterface dialog) {
+                                Log.i("OpenCPN", "DirChooserDialog Cancel");
+                                nativeBridge.postJsonEvent(
+                                        JSONHelpers.makeEvent(seq,
+                                                "privateDirSelected",
+                                                "dirName", "",
+                                                "action", "cancel"));
+                            }
+                        });
+
+                        dialog.show();
+                });
+
+        return "OK";
+    }
+
+    //--------------------------------------------------------------------------------------
+    //  File chooser dialog for local sandbox directories
+    //  Async version
+    //--------------------------------------------------------------------------------------
+    public String privateFileChooserDialogAsync(final int seq, final String initialDir, final String Title, final String addFile) {
+
+        String dirStart = initialDir;
+        if (dirStart.isEmpty())
+            dirStart = activity.getExternalFilesDir(null).getPath();
+
+        final String dirThreadStart = dirStart;
+
+        Log.i("OpenCPN", "localFileChooserDialog create and show " + dirThreadStart);
+
+        activity.runOnUiThread(() -> {
+
+            final FileChooserDialog dialog =
+                    new FileChooserDialog(
+                            activity,
+                            dirThreadStart);
+
+            dialog.setShowFullPath(true);
+            dialog.setFolderMode(false);
+            boolean baddfile = false;
+            if (addFile.startsWith("true")) baddfile = true;
+            dialog.setCanCreateFiles(baddfile);
+            dialog.setTitle(Title);
+
+            dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
+                public void onFileSelected(Dialog source, File file) {
+                    source.hide();
+                    String fileName = file.getAbsolutePath();
+                    nativeBridge.postJsonEvent(
+                            JSONHelpers.makeEvent(seq,
+                                    "privateDirSelected",
+                                    "dirName", fileName,
+                                    "action", "select"));
+
+                }
+
+                public void onFileSelected(Dialog source, File folder, String name) {
+                    //Log.i("OpenCPN", "Activity onFileSelectedB: " + folder.getPath() +  File.separator + name);
+
+                    File newFolder = new File(folder.getPath() + File.separator + name);
+                    boolean success = true;
+                    if (!newFolder.exists())
+                        success = newFolder.mkdirs();
+
+                    if (!success) {
+                        Toast toast = Toast.makeText(source.getContext(), "Could not create file in: " + folder.getPath(), Toast.LENGTH_LONG);
+                        toast.show();
+                    }
+
+                    dialog.loadFolder(folder.getPath());
+                }
+
+            });
+
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface dialog) {
+                    Log.i("OpenCPN", "DirChooserDialog Cancel");
+                    nativeBridge.postJsonEvent(
+                            JSONHelpers.makeEvent(seq,
+                                    "privateDirSelected",
+                                    "dirName", "",
+                                    "action", "cancel"));
+                }
+            });
+
+            dialog.show();
+        });
+
+        return "OK";
+    }
+
+    //--------------------------------------------------------------------------------------
+    //  Directory chooser dialog for local sandbox directories
+    //  Sync version
+    //--------------------------------------------------------------------------------------
+    String filechooserString = "";
+    public String privateDirChooserDialogSync(final int seq, final String initialDir, final String Title, final String addFile) {
+
+        String dirStart = initialDir;
+        if (dirStart.isEmpty())
+            dirStart = activity.getExternalFilesDir(null).getPath();
+
+        final String dirThreadStart = dirStart;
+
+        Log.i("OpenCPN", "localDirChooserDialog create and show " + dirThreadStart);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        ///
+       activity.runOnUiThread(() -> {
+
+            final FileChooserDialog dialog =
+                    new FileChooserDialog(
+                            activity,
+                            dirThreadStart);
+
+            dialog.setShowFullPath(true);
+            dialog.setFolderMode(true);
+            boolean baddfile = false;
+            if (addFile.startsWith("true")) baddfile = true;
+            dialog.setFolderMode(true);
+            dialog.setCanCreateFiles(baddfile);
+            dialog.setTitle(Title);
+
+            dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
+                public void onFileSelected(Dialog source, File file) {
+                    source.hide();
+                    String fileName = file.getAbsolutePath();
+                    filechooserString = fileName;
+                    latch.countDown();
+
+
+                    //Toast toast = Toast.makeText(source.getContext(), "File selected: " + file.getName(), Toast.LENGTH_LONG);
+                    //toast.show();
+
+                    //Log.i("OpenCPN", "Activity onFileSelectedA: " + file.getPath());
+                    //m_filechooserString = "file:" + file.getPath();
+                    //m_FileChooserDone = true;
+
+                }
+
+                public void onFileSelected(Dialog source, File folder, String name) {
+                    //Log.i("OpenCPN", "Activity onFileSelectedB: " + folder.getPath() +  File.separator + name);
+
+                    File newFolder = new File(folder.getPath() + File.separator + name);
+                    boolean success = true;
+                    if (!newFolder.exists())
+                        success = newFolder.mkdirs();
+
+                    if (!success) {
+                        Toast toast = Toast.makeText(source.getContext(), "Could not create file in: " + folder.getPath(), Toast.LENGTH_LONG);
+                        toast.show();
+                    }
+
+                    dialog.loadFolder(folder.getPath());
+                }
+
+            });
+
+            dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface dialog) {
+                    Log.i("OpenCPN", "DirChooserDialog Cancel");
+                    filechooserString = "cancel:";
+                    //m_FileChooserDone = true;
+                    latch.countDown();
+                }
+            });
+
+            dialog.show();
+        });
+
+
+
+
+        // And wait for it to complete
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            filechooserString = "exception";
+        }
+
+        return filechooserString;
+    }
+
+    //--------------------------------------------------------------------------------------
+    //  File chooser dialog for local sandbox files
+    //--------------------------------------------------------------------------------------
+/*
+    public String FileChooserDialog(final String initialDir, final String Title, final String Suggestion, final String wildcard) {
+        m_FileChooserDone = false;
+        String safeDir = getExternalFilesDir(null).getPath();
+        boolean bSafe = initialDir.startsWith(safeDir);
+
+
+        // Check to see if "scoped storage model is active (Anroid 10 and above)
+        if (!bSafe && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)) {
+        } else {    //  Use the old-fashioned legacy file browser.
+            Log.i("DEBUGGER_TAG", "FileChooserDialog create and show " + initialDir);
+            final CountDownLatch latch = new CountDownLatch(1);
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+
+                    // Block this thread for 20 msec.
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException e) {
+                    }
+
+                    // After sleep finishes blocking, create a Runnable to run on the UI Thread.
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String startDir = initialDir;
+
+                            File target = new File(initialDir);
+                            if (!target.canWrite())
+                                startDir = getExternalFilesDir(null).getPath();
+
+                            FileChooserDialog dialog = new FileChooserDialog(m_activity, startDir);
+
+                            dialog.setShowFullPath(true);
+                            dialog.setTitle(Title);
+
+                            //  Creating a file?
+                            if (!Suggestion.isEmpty()) {
+                                dialog.setCanCreateFiles(true);
+                                dialog.setsuggestedOnCreate(Suggestion);
+                            }
+
+                            dialog.addListener(new FileChooserDialog.OnFileSelectedListener() {
+                                public void onFileSelected(Dialog source, File file) {
+                                    source.hide();
+                                    //Toast toast = Toast.makeText(source.getContext(), "File selected: " + file.getName(), Toast.LENGTH_LONG);
+                                    //toast.show();
+                                    Log.i("OpenCPN", "FileChooserDialog selected: " + file.getName());
+
+                                    m_filechooserString = "file:" + file.getPath();
+                                    m_FileChooserDone = true;
+                                    latch.countDown();
+                                }
+
+                                public void onFileSelected(Dialog source, File folder, String name) {
+                                    source.hide();
+                                    //Toast toast = Toast.makeText(source.getContext(), "File created: " + folder.getName() + "/" + name, Toast.LENGTH_LONG);
+                                    //toast.show();
+                                    Log.i("OpenCPN", "Listener: FileChooserDialog created: " + folder.getName() + "/" + name);
+
+                                    m_filechooserString = "file:" + folder.getPath() + "/" + name;
+
+                                    final File newFile = new File(folder.getPath() + File.separator + name);
+                                    if (!folder.canWrite()) {
+                                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
+                                            Log.i("OpenCPN", "FileChooserDialog listener needs SAF dialog");
+
+                                            //  Is this on an SDCard?
+                                            String sdRoot = getExtSdCardFolder(folder);
+                                            if (null != sdRoot) {
+                                                Log.i("OpenCPN", "FileChooserDialog listener found sdCard");
+
+                                                // This will NOT create the file
+                                                DocumentFile f = getDocumentFile(folder, true, false);
+                                                if (null == f) {
+                                                    startSAFDialog(OCPN_SAF_DIALOG_A_REQUEST_CODE);
+                                                    return;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        try {
+                                            newFile.createNewFile();
+                                        } catch (IOException e) {
+                                            m_filechooserString = "cancel:";
+                                        }
+                                    }
+
+                                    m_FileChooserDone = true;
+                                    latch.countDown();
+                                }
+                            });
+
+                            dialog.setOnCancelListener(new OnCancelListener() {
+                                public void onCancel(DialogInterface dialog) {
+                                    Log.i("OpenCPN", "FileChooserDialog Cancel");
+                                    m_filechooserString = "cancel:";
+                                    m_FileChooserDone = true;
+                                    latch.countDown();
+                                }
+                            });
+
+                            dialog.show();
+                        }
+                    });
+                }
+            };
+
+            // Don't forget to start the thread.
+            thread.start();
+
+            // And wait for it to complete
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                m_filechooserString = "cancel:";
+            }
+
+            return m_filechooserString;
+        }
+    }
+*/
 
 
     // SAF interface

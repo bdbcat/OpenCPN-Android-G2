@@ -74,7 +74,7 @@ public class FileChooserDialog extends Dialog implements FileChooser {
 	 */
 	public FileChooserDialog(Context context, String folderPath) {
 		// Call superclass constructor.
-		super(context);
+		super(context, android.R.style.Theme_DeviceDefault_Light_Dialog);
 
 		mContext = context;
         mActivity = getOwnerActivity();
