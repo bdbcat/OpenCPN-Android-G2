@@ -118,7 +118,7 @@ dependencies {
     def Qt_Build_x86 = "build_x86"
     def OCPN_Base = "/home/dsr/Projects/opencpn"
     def OCPN_Build = "build_android_32_cci_22b"
-    def OCPN_Build_64 = "build_android_64_cci_22b"
+    def OCPN_Build_64 = "build_android_64_515_27_16k"
     def OCPN_Build_x86 = "build_android_x86_O3"
 
 
@@ -633,10 +633,10 @@ dependencies {
         preBuild.dependsOn(copyLocalefiFIFiles)
         preBuild.dependsOn(copyLocaleitFiles)
 
-        preBuild.dependsOn(copyWMM_PIFiles)
-        preBuild.dependsOn(copyDNLDR_PIFiles)
-        preBuild.dependsOn(copyGRIB_PIFiles)
-        preBuild.dependsOn(copyDASHBOARD_PIFiles)
+        //preBuild.dependsOn(copyWMM_PIFiles)
+        //preBuild.dependsOn(copyDNLDR_PIFiles)
+        //preBuild.dependsOn(copyGRIB_PIFiles)
+        //preBuild.dependsOn(copyDASHBOARD_PIFiles)
         //preBuild.dependsOn(copySQUIDDIO_PIFiles)
 
         preBuild.dependsOn(copyWMM_PIFiles64)
