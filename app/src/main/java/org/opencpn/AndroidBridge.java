@@ -363,6 +363,107 @@ public class AndroidBridge {
                 }
 
 
+                case "GET_FULL_SCREEN": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "IS_HELP_AVAIL": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "LAUNCH_HELPBOOK": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "CANCEL_TIMED_TOAST": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "GET_TZ_OFFSET": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+               case "IS_NET_AVAIL": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "GET_MAPI_LICENSE": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "CANCEL_MIGRATION": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "MIGRATE_SETUP": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "GET_MIGRATE_STATUS": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "RESTART_AFTER_MIGRATE": {
+                    JSONObject result = new JSONObject();
+                    result.put("status", "ERROR");
+                    result.put("message", "UNKNOWN_COMMAND");
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+
+
                 default: {
 
                     JSONObject result = new JSONObject();
