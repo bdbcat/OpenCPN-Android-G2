@@ -1,5 +1,6 @@
 package org.opencpn;
 
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -27,6 +28,11 @@ import org.qtproject.qt5.android.QtActivityDelegate;
 import org.qtproject.qt5.android.QtNative;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Locale;
 
 public class HostManager {
@@ -448,5 +454,164 @@ public class HostManager {
 
     public Activity getActivity() {
         return activity;
+    }
+
+    public void relocateOCPNPlugins() {
+        // We need to relocate the PlugIns that have been included as "assets"
+
+        // Reason:  PlugIns can only load from the apps dataDir, which is like:
+        //          "/data/data/org.opencpn.opencpn"
+        //          This is due to some policy in the system loader....
+        //
+        //           There is no need to relocate any data files needed by the PlugIns
+        //           since they will have been added as assets and moved to the file system
+        //           by assetbridge elsewhere.
+        //
+        //          Since this method runs on every restart, it may be used to condition manually installed
+        //          PlugIns as well.  Just somehow install the PlugIn .so file into ".../files/plugins" dir,
+        //          and it will be moved to the proper load location on restart.
+
+        Log.i("OpenCPN", "relocateOCPNPlugins");
+
+        //  Detect 64 bits:
+        boolean b64 = true;
+
+/*
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Log.i("OpenCPN", "relocateOCPNPlugins for " + Build.SUPPORTED_ABIS[0]);
+            b64 = TextUtils.join(", ", Build.SUPPORTED_ABIS).contains("64") ? TRUE : FALSE;
+        } else {
+            b64 = FALSE;
+        }
+*/
+
+        if (b64)
+            Log.i("OpenCPN", "relocateOCPNPlugins64");
+        else
+            Log.i("OpenCPN", "relocateOCPNPlugins32");
+
+/*
+       // On Moto G
+       // This produces "/data/data/org.opencpn.opencpn/files"
+       //  Which is where the app files would be with default load
+       String iDir = getFilesDir().getPath();
+       String ssd = iDir + "/plugins";
+
+
+       //  Maybe the app has been migrated to SDCard...
+       sApplicationInfo ai = getApplicationInfo();
+       if((ai.flags & ApplicationInfo.FLAG_EXTERNAL_STORAGE) ==  ApplicationInfo.FLAG_EXTERNAL_STORAGE){
+           Log.i("OpenCPN", "relocateOCPNPlugins:  OCPN is on EXTERNAL_STORAGE");
+           File[] fx = getExternalFilesDirs(null);
+           if(fx.length > 1){
+               ssd = fx[1].getPath() + File.separator + "plugins";
+           }
+       }
+*/
+        File fd = new File(m_filesDir);
+        String ssd = fd.getPath() + File.separator + "plugins";
+
+        File sourceDir = new File(ssd);
+
+        // The PlugIn .so files are always relocated to here, which looks like:
+        // "/data/data/org.opencpn.opencpn"
+        String finalDestination = activity.getApplicationInfo().dataDir;
+
+        File[] dirs = sourceDir.listFiles();
+        if (dirs != null) {
+            for (int j = 0; j < dirs.length; j++) {
+                File sfile = dirs[j];
+                Log.i("OpenCPN", "relocateOCPNPlugins considering: " + sfile.getName());
+
+                // As a special case, if present we capture and relocate "libgnustl_shared.so", 32 Bit,  to support some legacy plugins.
+                //  We store it in "finalDestination", and plugins can access it by specifying a LD_LIBRARY environment directory
+                if (sfile.isFile() && sfile.getAbsolutePath().endsWith("libgnustl_shared.so")) {
+                    try {
+                        File destinationFile = new File(finalDestination + "/" + "libgnustl_shared.so");
+                        if (!destinationFile.exists()) {
+                            File parentDirectory = destinationFile.getParentFile();
+                            if (!parentDirectory.exists())
+                                parentDirectory.mkdirs();
+
+                            InputStream inputStream = new FileInputStream(sfile.getAbsolutePath());
+                            OutputStream outputStream = new FileOutputStream(finalDestination + "/" + "libgnustl_shared.so");
+                            copyFile(inputStream, outputStream);
+                            inputStream.close();
+                            outputStream.close();
+                            Log.i("OpenCPN", "relocateOCPNPlugins copyFile libgnustl_shared.so OK");
+                        } else {
+                            Log.i("OpenCPN", "relocateOCPNPlugins libgnustl_shared.so already in place");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.i("OpenCPN", "relocateOCPNPlugins copyFile libgnustl_shared.so Exception");
+                    }
+                }
+
+                if (sfile.isFile() && !sfile.getAbsolutePath().endsWith(".so")) {     // Don't relocate legacy plugins on upgrade
+
+                    String source = sfile.getAbsolutePath();
+                    String soName = "NOTSET";
+                    if (source.endsWith("so64") || source.endsWith("so32")) {
+                        if (b64) {
+                            if (source.endsWith("so64"))
+                                soName = sfile.getName().replace("so64", "so");
+                        } else {
+                            if (source.endsWith("so32"))
+                                soName = sfile.getName().replace("so32", "so");
+                        }
+                    } else {        // Any binary executables, or any other files not ending with "soxx"?
+                        soName = sfile.getName();          // if so, copy directly
+                    }
+
+                    if (soName.equals("NOTSET"))
+                        continue;                         // skip everything else
+
+                    String dest = finalDestination + "/" + soName;
+
+                    if (soName.contains("celes")) {
+                        dest = finalDestination + "/manPlug/" + soName;
+                    }
+                    try {
+                        InputStream inputStream = new FileInputStream(source);
+                        OutputStream outputStream = new FileOutputStream(dest);
+                        copyFile(inputStream, outputStream);
+                        inputStream.close();
+                        outputStream.close();
+                        Log.i("OpenCPN", "relocateOCPNPlugins copyFile OK: " + source + " to " + dest);
+
+                        if (!dest.endsWith(".so")) {
+                            Log.i("OpenCPN", "relocateOCPNPlugins setting executable on: " + dest);
+                            File file = new File(dest);
+                            file.setExecutable(true);
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.i("OpenCPN", "relocateOCPNPlugins copyFile Exception");
+                    }
+                }
+            }
+        }
+
+        // A special case:
+        // In OA 5.2.2/61, Squiddio was ported to a managed plugin.
+        //  So, on app upgrade, we need to remove the unmanaged (system-type) Squiddio plugin
+        //   in order that the managed version can be loaded without CommonName conflist.
+        if (BuildConfig.VERSION_CODE >= 61) {
+            File squiddio_unmanaged = new File(finalDestination + "/libsquiddio_pi.so");
+            if (squiddio_unmanaged.exists())
+                squiddio_unmanaged.delete();
+        }
+
+    }
+    private static final int BUFFER_SIZE =  1048576;
+    static void copyFile(InputStream inputStream, OutputStream outputStream)
+            throws IOException {
+        byte[] buffer = new byte[BUFFER_SIZE];
+
+        int count;
+        while ((count = inputStream.read(buffer)) > 0)
+            outputStream.write(buffer, 0, count);
     }
 }

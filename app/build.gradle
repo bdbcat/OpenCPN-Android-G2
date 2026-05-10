@@ -509,8 +509,10 @@ dependencies {
     }
 
     task copyOCPN_CORE_64(type: Copy) {
-        from "/home/dsr/Projects/opencpn/build_android_64_515_27_16k/libOpenCPN_arm64-v8a.so"
+        from "/home/dsr/Projects/opencpn/build_android_64_515_27_16k/libgorp.so"
         into 'src/main/jniLibs/arm64-v8a'
+        rename ('libgorp.so', 'libgorp_arm64-v8a.so')
+
     }
 
     task copyOCPN_CORE_x86(type: Copy) {
@@ -639,10 +641,10 @@ dependencies {
         //preBuild.dependsOn(copyDASHBOARD_PIFiles)
         //preBuild.dependsOn(copySQUIDDIO_PIFiles)
 
-        preBuild.dependsOn(copyWMM_PIFiles64)
+       // preBuild.dependsOn(copyWMM_PIFiles64)
         preBuild.dependsOn(copyDNLDR_PIFiles64)
-        preBuild.dependsOn(copyGRIB_PIFiles64)
-        preBuild.dependsOn(copyDASHBOARD_PIFiles64)
+        //preBuild.dependsOn(copyGRIB_PIFiles64)
+        //preBuild.dependsOn(copyDASHBOARD_PIFiles64)
         //preBuild.dependsOn(copySQUIDDIO_PIFiles64)
 
         preBuild.dependsOn(copyWMM_PIDataFiles)

@@ -133,6 +133,8 @@ public class MyQtActivity extends QtActivity {
         }
 
         invalidateOptionsMenu();
+
+        hostManager.relocateOCPNPlugins();
     }
 
     private void initNativeLibraryDir() {

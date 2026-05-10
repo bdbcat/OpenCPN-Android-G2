@@ -34,7 +34,7 @@ public class OCPNConnectivityManager {
     public void init(MyQtActivity activity) {
         this.activity = activity;
 
-        m_GPSServer = new GPSServer();
+        //m_GPSServer = new GPSServer();
 
          GPSconnection = new ServiceConnection() {
 
@@ -83,8 +83,8 @@ public class OCPNConnectivityManager {
 
         if (GPSServer.GPS_PROVIDER_AVAILABLE == server_cmd) {
             String ret_string = "NO";
-            if (activity.m_hasGPS)
-                ret_string = "YES";
+            //if (activity.m_hasGPS)
+              //  ret_string = "YES";
 
             Log.i("OpenCPN", "Available: " + ret_string);
 
