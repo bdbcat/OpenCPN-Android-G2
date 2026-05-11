@@ -48,6 +48,7 @@ import android.graphics.Canvas;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.ActionMode;
 import android.view.ActionMode.Callback;
 import android.view.ContextMenu;
@@ -60,6 +61,8 @@ import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.view.accessibility.AccessibilityEvent;
 
+import org.opencpn.AppController;
+import org.opencpn.MyQtActivity;
 import org.qtproject.qt5.android.QtNative;
 
 public class QtActivity extends Activity
@@ -1151,4 +1154,97 @@ public class QtActivity extends Activity
     {
         QtNative.activityDelegate().notifyQtAndroidPluginRunning(running);
     }
+
+
+// ======================================================
+// Legacy Plugin JNI Compatibility Layer
+// Temporary Qt5 compatibility shim.
+// Remove during Qt6 migration.
+// ======================================================
+
+    protected AppController getAppControllerShim() {
+        if (this instanceof org.opencpn.MyQtActivity) {
+            return ((org.opencpn.MyQtActivity)this)
+                    .getAppController();
+        }
+        return null;
+    }
+
+    public String getDeviceInfo() {
+        Log.i("LegacyJNI", "getDeviceInfo()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.hostManager.getDeviceInfo();
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDeviceInfo failed", t);
+            return "NOK";
+        }
+    }
+
+    public String getDisplayMetrics() {
+        Log.i("LegacyJNI", "getDisplayMetrics()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.hostManager.getDisplayMetrics();
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDisplayMetrics failed", t);
+            return "NOK";
+        }
+    }
+    //public String getDownloadStatus(final int ID) {
+
+    public String getDownloadStatus(final int id) {
+        Log.i("LegacyJNI", "getDownloadStatus()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.downloadManager.getDownloadStatus(id);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDownloadStatus failed", t);
+            return "NOK";
+        }
+    }
+
+    public String unzipFile(final String source, final String destination, String nStrip, String bRemoveZip) {
+        Log.i("LegacyJNI", "unzipFile()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.downloadManager.unzipFile(source, destination, nStrip,  bRemoveZip);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "unzipFile failed", t);
+            return "NOK";
+        }
+    }
+
+    public String getUnzipStatus(final String dummy) {
+        Log.i("LegacyJNI", "getUnzipStatus()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.downloadManager.getUnzipStatus(dummy);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getUnzipStatus failed", t);
+            return "NOK";
+        }
+    }
+
+
 }

@@ -462,6 +462,18 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                //public String validateWriteLocation(final String destination, final String dummy, final int chainCode, final int dummyInt) {
+
+                    case "VALIDATE_WRITE_LOCATION": {
+                    String destination = obj.optString("destination", "");
+
+                    String aresult = downloadManager.validateWriteLocation(destination, "", 0,0);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
 
 
                 default: {

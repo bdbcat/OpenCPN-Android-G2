@@ -29,6 +29,12 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
       mReceiver.setReceiver(this);
     }
 
+    private String m_unzipLastFile = "";
+    private String unzipTopDir = "";
+    private boolean m_unzipDone;
+
+
+
     // -----------------------------------------------------------------------
     // Utility methods
 
@@ -58,6 +64,23 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
             nativeLib.setDownloadStatus(m_downloadStatus, m_downloadURL);
             Log.i("OpenCPN", "DOWNLOAD_DONE " + m_downloadStatus + " " + m_downloadTotal + " " + m_downloadTotal + " " + m_downloadFilelength);
         }
+
+        if (resultCode == UnzipService.UNZIP_DONE) {
+            Log.i("OpenCPN", "UNZIP_DONE ");
+            m_unzipDone = true;
+        }
+
+        if (resultCode == UnzipService.UNZIP_FILE) {
+            Log.i("OpenCPN", "UNZIP_FILE ");
+            String lastFile = resultData.getString("lastFile");
+            m_unzipLastFile = lastFile;
+            Log.i("OpenCPN", "UNZIP_FILE: " + m_unzipLastFile);
+        }
+
+        if (resultCode == UnzipService.TOPDIR) {
+            unzipTopDir = resultData.getString("topDir");
+        }
+
     }
 
 
@@ -201,6 +224,30 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
         return ret;
     }
 
+
+    public String unzipFile(final String source, final String destination, String nStrip, String bRemoveZip) {
+
+        Log.i("OpenCPN", "unzipFile " + source + " to " + destination);
+
+        Intent intent = new Intent(activity, UnzipService.class);
+        intent.putExtra("sourceZip", source);
+        intent.putExtra("targetDir", destination);
+        intent.putExtra("receiver", mReceiver);
+        intent.putExtra("nStrip", Integer.parseInt(nStrip));
+        intent.putExtra("removeZip", Integer.parseInt(bRemoveZip));
+        m_unzipDone = false;
+
+        activity.startService(intent);
+        return "OK;78";
+
+    }
+
+    public String getUnzipStatus(String dummy) {
+        if (m_unzipDone)
+            return "UNZIPDONE " + unzipTopDir;
+        else
+            return m_unzipLastFile;
+    }
 
 
 

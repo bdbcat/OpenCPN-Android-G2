@@ -15,7 +15,7 @@ import android.util.Log;
 public class OCPNConnectivityManager {
 
     private Context context;
-    private MyQtActivity activity;
+    private Activity activity;
     private GPSServer m_GPSServer;
     public ServiceConnection GPSconnection;
 
@@ -25,16 +25,17 @@ public class OCPNConnectivityManager {
     private int m_gpsServerPendingParm = 0;
     private boolean m_gpsOn;
     private boolean m_GPSPermissionRequested;
+    public boolean m_hasGPS = true;
 
 
     public  OCPNConnectivityManager(Activity avtivity) {
         this.activity = activity;
     }
 
-    public void init(MyQtActivity activity) {
+    public void init(Activity activity) {
         this.activity = activity;
 
-        //m_GPSServer = new GPSServer();
+         m_GPSServer = new GPSServer();
 
          GPSconnection = new ServiceConnection() {
 
@@ -83,8 +84,8 @@ public class OCPNConnectivityManager {
 
         if (GPSServer.GPS_PROVIDER_AVAILABLE == server_cmd) {
             String ret_string = "NO";
-            //if (activity.m_hasGPS)
-              //  ret_string = "YES";
+            if (m_hasGPS)
+                ret_string = "YES";
 
             Log.i("OpenCPN", "Available: " + ret_string);
 

@@ -52,8 +52,9 @@ public class MyQtActivity extends QtActivity {
     private OCPNConnectivityManager connectivityManager;
     public boolean m_hasGPS = false;
     private DownloadManager downloadManager;
+    private AppController app;
 
-
+    /*
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
@@ -71,7 +72,7 @@ public class MyQtActivity extends QtActivity {
         //toolbarController = new ToolbarController(this, menuController);
         fileController = new FileController(this, OpenCPNBridge.getInstance(this), sNativeBridge);
         downloadManager = new DownloadManager();
-        
+
         // Initialize the JNI bridge
         AndroidBridge.initialize(hostManager, menuController, connectivity,
                 fileController, connectivityManager, downloadManager, this);
@@ -137,6 +138,87 @@ public class MyQtActivity extends QtActivity {
         hostManager.relocateOCPNPlugins();
     }
 
+     */
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        app = new AppController(this);
+        app.init(savedInstanceState);
+
+        initNativeLibraryDir();
+        checkPermissions();
+    }
+
+    public AppController getAppController() {
+        return app;
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        app.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        app.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        app.onPause();
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        app.onStop();
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        app.onDestroy();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+
+        ViewGroup root = findViewById(android.R.id.content);
+        root.post(() -> app.setupHybridLayout(root));
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (app.handleBack()) return;
+
+        if (Build.VERSION.SDK_INT < 33) {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions,
+                                           int[] grantResults) {
+        app.onRequestPermissionsResult(
+                requestCode, permissions, grantResults);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode,
+                                    int resultCode,
+                                    Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        app.onActivityResult(requestCode, resultCode, data);
+    }
+
     private void initNativeLibraryDir() {
         try {
             ApplicationInfo ainfo =
@@ -171,231 +253,6 @@ public class MyQtActivity extends QtActivity {
         // TODO Fine location permission
     }
 
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-        final ViewGroup root = findViewById(android.R.id.content);
-
-        if (root == null || root.getChildCount() == 0) {
-            Log.e("OpenCPN", "Root view not ready");
-            return;
-        }
-
-        root.post(() -> setupHybridLayout(root));
-    }
-
-
-    protected void xonPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-
-        final ViewGroup root = findViewById(android.R.id.content);
-
-        if (root == null || root.getChildCount() == 0) {
-            Log.e("OpenCPN", "Root view not ready");
-            return;
-        }
-
-        // Post to ensure Qt has fully attached its view hierarchy
-        root.post(() -> {
-
-            try {
-                Log.i("OpenCPN", "onPostCreate: restructuring layout");
-
-                // --- Step 1: Capture Qt view ---
-                View qtView = root.getChildAt(0);
-
-                if (qtView == null) {
-                    Log.e("OpenCPN", "Qt view not found");
-                    return;
-                }
-
-                Log.i("OpenCPN", "Qt view class: " + qtView.getClass().getName());
-
-                // --- Step 2: Remove Qt view from root ---
-                root.removeAllViews();
-
-                // --- Step 3: Create vertical container ---
-                LinearLayout container = new LinearLayout(this);
-                container.setOrientation(LinearLayout.VERTICAL);
-                container.setLayoutParams(new FrameLayout.LayoutParams(
-                        MATCH_PARENT,
-                        MATCH_PARENT
-                ));
-
-                // --- Step 4: Inflate toolbar layout ---
-
-                LayoutInflater inflater = LayoutInflater.from(this);
-                //View toolbarLayout = inflater.inflate(R.layout.activity_main, container, false);
-                View toolbar_overlay = inflater.inflate(R.layout.toolbar_overlay, container,false);
-
-                // --- Step 6: Assemble layout ---
-                container.addView(toolbar_overlay);
-                container.addView(qtView);
-
-                // --- Step 7: Attach back to root ---
-                root.addView(container);
-
-                Log.i("OpenCPN", "Layout restructuring complete");
-
-                // Add overflow listener
-                ImageButton overflow =
-                        toolbar_overlay.findViewById(R.id.btn_overflow);
-
-                overflow.setOnClickListener(v -> {
-
-                    PopupMenu popup =
-                            new PopupMenu(this, overflow);
-
-                    popup.getMenuInflater().inflate(
-                            R.menu.activity_main_actions,
-                            popup.getMenu());
-
-                    popup.setOnMenuItemClickListener(item ->
-                            menuController.handle(item));
-
-                    popup.show();
-                });
-
-                ImageButton follow =
-                        toolbar_overlay.findViewById(R.id.btn_follow);
-
-                follow.setOnClickListener(v -> {
-                    menuController.onFollowPressed();
-                });
-
-            } catch (Exception e) {
-                Log.e("OpenCPN", "Error restructuring layout", e);
-            }
-        });
-    }
-
-    @Override
-    protected void onStart() {
-        Log.i("OpenCPN", "onStart");
-
-        // TODO o-charts server test (createProcSync5stdout)
-
-        // TODO cancel foreground/background notification
-
-        nativeBridge.onStart();
-        super.onStart();
-
-        // TODO QtApplication.invokeDelegate() — verify if ever needed
-    }
-
-    @Override
-    protected void onResume() {
-        Log.i("OpenCPN", "onResume");
-
-        m_inExit = false;
-
-        nativeBridge.onResume();
-
-        // TODO re-init USB serial + scan ports
-        // TODO register SailTimer / BLE receiver
-
-        super.onResume();
-
-        if (toolbarController != null) {
-            //toolbarController.init();
-        }
-
-        //hostManager.initInsetsListener();
-
-
-    }
-
-    @Override
-    protected void onPause() {
-        Log.i("OpenCPN", "onPause");
-
-        nativeBridge.onPause();
-
-        // TODO stop toast timer if running
-        // TODO unregister SailTimer / BLE receiver
-
-        // TODO background tracking notification handling
-
-        super.onPause();
-
-        // TODO QtApplication.invokeDelegate() — likely removable
-
-        // TODO ANR watchdog for forced exit handling
-    }
-
-    @Override
-    protected void onStop() {
-        Log.i("OpenCPN", "onStop");
-
-        // TODO stop toast timer
-
-        // TODO GPS server OFF if not tracking
-
-        usb.stop(this);
-        nativeBridge.onStop();
-
-        // Preserve original delay logic
-        if (!m_inExit) {
-            Log.i("OpenCPN", "onStop Spin1...");
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        super.onStop();
-
-        Log.i("OpenCPN", "onStop Done");
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.i("OpenCPN", "onDestroy");
-
-        nativeBridge.onDestroy();
-        connectivity.cleanup();
-
-        // TODO unregister locale receiver
-
-        super.onDestroy();
-
-        Log.i("OpenCPN", "onDestroy Done");
-
-        // Required for Qt cleanup (legacy but still likely needed)
-        System.exit(0);
-    }
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        if (hasFocus) {
-            getWindow().clearFlags(
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-            View decor = getWindow().getDecorView();
-            decor.setSystemUiVisibility(0);
-
-
-        }
-    }
-
-    public void xshowMenu() {
-        View root = findViewById(android.R.id.content);
-        final View anchor = getWindow().getDecorView();
-
-        PopupMenu popup = new PopupMenu(this, root);
-        popup.getMenuInflater().inflate(R.menu.activity_main_actions, popup.getMenu());
-
-        popup.setOnMenuItemClickListener(item -> {
-            return menuController.handle(item);
-        });
-
-        popup.show();
-    }
 
     public void showMenu() {
         final ViewGroup root = (ViewGroup)getWindow().getDecorView();
@@ -522,203 +379,9 @@ public class MyQtActivity extends QtActivity {
         return "OK";
     }
 
-    //---------------------------------------------------------------------------------------
-    // Private back-button handler
-
-    private static final long BACK_PRESS_INTERVAL_MS = 3000;
-    private long lastBackPressTime = 0;
-    private Toast toast;
 
 
-    private void handleBackPressedCommon() {
 
-        if (m_inExit)
-            return;
-
-        if (handleOCPNBackButton()) {
-            m_inExit = true;
-            preClose();
-            finish();
-        }
-    }
-
-    boolean handleOCPNBackButton() {
-
-        long now = System.currentTimeMillis();
-
-        if ((now - lastBackPressTime) > BACK_PRESS_INTERVAL_MS) {
-
-            if (toast != null) {
-                toast.cancel();
-            }
-
-            toast = Toast.makeText(
-                    this,
-                    "Press back again to close OpenCPN",
-                    Toast.LENGTH_LONG);
-
-            toast.show();
-
-            lastBackPressTime = now;
-
-            return false;
-        }
-
-        if (toast != null) {
-            toast.cancel();
-        }
-
-        return true;
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (Build.VERSION.SDK_INT >= 33) {  // handle by OnBackInvokedDispatcher
-            return;
-        }
-        handleBackPressedCommon();
-   }
-
-    void preClose(){
-        nativeLib.ScheduleCleanExit();
-    }
-
-    public boolean xonCreateOptionsMenu(Menu menu)
-    {
-        //getMenuInflater().inflate(R.menu.test_menu, menu);
-        MenuItem item = menu.add(
-                Menu.NONE,
-                1001,
-                Menu.NONE,
-                "Test2");
-
-        item.setIcon(android.R.drawable.ic_menu_compass);
-        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        Log.i("MENU",
-                "Menu size=" + menu.size());
-
-        for (int i = 0; i < menu.size(); i++) {
-            MenuItem itemx = menu.getItem(i);
-
-            Log.i("MENU",
-                    "item=" + itemx.getTitle());
-        }
-        return true;
-    }
-
-    public boolean xonPrepareOptionsMenu(Menu menu) {
-        Log.i("MENU", "onPrepareOptionsMenu");
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode,
-                                    int resultCode,
-                                    Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        // Dispatch cased on numeric range of requestCode
-        if ((requestCode >= 5000) && (resultCode < 6000)) {
-            fileController.safManager.onActivityResult(requestCode, resultCode, data);
-        }
-    }
-
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        Log.i("OpenCPN", "onRequestPermissionsResult");
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                connectivityManager.handlePermissionResults(requestCode, permissions, grantResults);
-                return;
-            }
-
-            // other 'case' lines to check for other
-            // permissions this app might request
-            case MY_PERMISSIONS_REQUEST_WRITE_STORAGE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // task you need to do.
-                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_WRITE_STORAGE permission granted");
-
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_WRITE_STORAGE permission denied");
-                }
-                return;
-            }
-            case MY_PERMISSIONS_REQUEST_BT_CONNECT: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // task you need to do.
-                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_BT_CONNECT permission granted");
-
-                } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Log.i("OpenCPN", "MY_PERMISSIONS_REQUEST_BT_CONNECT permission denied");
-                }
-                return;
-            }
-        }
-    }
-
-    private void setupHybridLayout(ViewGroup root) {
-
-        try {
-
-            View qtView = root.getChildAt(0);
-
-            if (qtView == null) {
-                Log.e("OpenCPN", "Qt view not found");
-                return;
-            }
-
-            root.removeAllViews();
-
-            LinearLayout container = new LinearLayout(this);
-            container.setOrientation(LinearLayout.VERTICAL);
-
-            container.setLayoutParams(
-                    new FrameLayout.LayoutParams(
-                            MATCH_PARENT,
-                            MATCH_PARENT));
-
-            View toolbarOverlay =
-                    LayoutInflater.from(this)
-                            .inflate(
-                                    R.layout.toolbar_overlay,
-                                    container,
-                                    false);
-
-            container.addView(toolbarOverlay);
-            container.addView(qtView);
-
-            root.addView(container);
-
-            // Delegate ALL toolbar behavior
-            menuController.attachToolbar(toolbarOverlay);
-
-            // Height reporting
-            toolbarOverlay.post(() -> {
-                int h = toolbarOverlay.getHeight();
-                Log.i("OpenCPN",
-                        "Toolbar height=" + h);
-                notifyToolbarHeight(h);
-
-            });
-
-        } catch (Exception e) {
-            Log.e("OpenCPN",
-                    "Hybrid layout failed",
-                    e);
-        }
-    }
 
     private void notifyToolbarHeight(int h) {
 

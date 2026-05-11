@@ -57,7 +57,7 @@ public class MenuController {
     private MenuState menuState;
 
 
-    public MenuController(QtActivity activity, OCPNNativeLib nativeLib) {
+    public MenuController(Activity activity, OCPNNativeLib nativeLib) {
         this.activity = activity;
         this.nativeLib = nativeLib;
     

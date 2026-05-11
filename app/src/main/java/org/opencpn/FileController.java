@@ -1,6 +1,7 @@
 package org.opencpn;
 
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -32,13 +33,13 @@ public class FileController {
 
 
 
-    private final MyQtActivity activity;
+    private final Activity activity;
     //private final AndroidBridge bridge;
     public final SafManager safManager;
     private final NativeBridgeManager nativeBridge;
     private static final int BUFFER_SIZE = 1024 * 1024;
 
-    public FileController(MyQtActivity activity, OpenCPNBridge bridge, NativeBridgeManager nB) {
+    public FileController(Activity activity, OpenCPNBridge bridge, NativeBridgeManager nB) {
         this.activity = activity;
         nativeBridge = nB;
         safManager = new SafManager(activity, nativeBridge);
