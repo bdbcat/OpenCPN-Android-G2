@@ -1,6 +1,8 @@
 package org.opencpn;
 
 
+import static org.opencpn.UIThreadHelper.runOnUiThread;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,6 +13,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -38,6 +42,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -66,6 +71,7 @@ public class HostManager {
     private int insetLeft = 0;
     private int insetRight = 0;
     private String m_GRIBReturn;
+    private MediaPlayer mediaPlayer;
 
     public HostManager(Activity activity, OCPNNativeLib nativeLib) {
         this.activity = activity;
@@ -782,4 +788,43 @@ public class HostManager {
         while ((count = inputStream.read(buffer)) > 0)
             outputStream.write(buffer, 0, count);
     }
+
+    public String playSound(final String fileName, final String sound) {
+        Log.i("DEBUGGER_TAG", "playSound " + fileName);
+        if (mediaPlayer == null) {
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        }
+
+        if (mediaPlayer != null) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mediaPlayer.reset();
+                        mediaPlayer.setDataSource(fileName);
+                        mediaPlayer.prepare();
+                        mediaPlayer.setOnCompletionListener(
+                                new MediaPlayer.OnCompletionListener() {
+                                    @Override
+                                    public void onCompletion(MediaPlayer mp) {
+                                        BigInteger soundcb = new BigInteger(sound, 16);
+                                        long ptr = soundcb.longValue();
+                                        nativeLib.onSoundDone(ptr);
+                                    }
+                                }
+                        );
+                        //Log.i("DEBUGGER_TAG", "playSoundStart");
+                        mediaPlayer.start();
+                    } catch (Exception e) {
+                        // TODO: Remove this error checking before publishing
+                    }
+                }
+            });
+
+        }
+        return "OK";
+    }
+
+
 }

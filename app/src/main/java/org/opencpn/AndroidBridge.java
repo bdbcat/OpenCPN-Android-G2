@@ -363,6 +363,20 @@ public class AndroidBridge {
                 }
 
 
+                case "PLAY_SOUND": {
+                    int seq = obj.optInt("seq", -1);
+                    int icon_state = obj.optInt("icon_state", 0);
+                    String fileName = obj.optString("filename", "");
+                    String sound = obj.optString("sound", "");
+
+                    String jResult =  hostManager.playSound(fileName, sound);
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+
                 case "GET_FULL_SCREEN": {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
