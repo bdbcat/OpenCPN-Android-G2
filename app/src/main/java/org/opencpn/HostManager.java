@@ -4,6 +4,8 @@ package org.opencpn;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -11,6 +13,7 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -23,6 +26,8 @@ import android.content.pm.ActivityInfo;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.opencpn.opencpn.BuildConfig;
 import org.qtproject.qt5.android.QtActivityDelegate;
 import org.qtproject.qt5.android.QtNative;
@@ -33,12 +38,24 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Locale;
+import java.util.Objects;
 
 public class HostManager {
 
+    private static final int OCPN_GRIB_REQUEST_CODE = 6000;
+    private final static int ID_CMD_POST_JSON_TO_PLUGINS = 304;
+
     private final Activity activity;
     private final String m_filesDir;
+    private final OCPNNativeLib nativeLib;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
@@ -48,12 +65,61 @@ public class HostManager {
     private int insetBottom = 0;
     private int insetLeft = 0;
     private int insetRight = 0;
+    private String m_GRIBReturn;
 
-    public HostManager(Activity activity) {
+    public HostManager(Activity activity, OCPNNativeLib nativeLib) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
+        this.nativeLib = nativeLib;
     }
 
+
+    // --------------------------------------------------------------------
+    // Activity result entry point
+    // --------------------------------------------------------------------
+
+    public boolean onActivityResult(int requestCode,
+                                    int resultCode,
+                                    Intent data) {
+        if (requestCode == OCPN_GRIB_REQUEST_CODE) {
+//            Log.i("DEBUGGER_TAG", "onqtActivityResultGC");
+            // Make sure the request was successful
+            if (resultCode == Activity.RESULT_OK) {
+//                Log.i("DEBUGGER_TAG", "onqtActivityResultGD");
+                m_GRIBReturn = data.getStringExtra("GRIB_JSON");
+//                Log.i("GRIB", m_GRIBReturn);
+
+                //  Add a message ID string to the JSON for later processing
+                String json = "";
+                try {
+                    JSONObject js = new JSONObject(m_GRIBReturn);
+                    js.put("MessageID", "GRIB_APPLY_JSON_CONFIG");
+                    json = js.toString();
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+
+                nativeLib.invokeCmdEventCmdString(ID_CMD_POST_JSON_TO_PLUGINS, json);
+
+//                nativeLib.sendPluginMessage( "GRIB_APPLY_JSON_CONFIG", m_GRIBReturn);
+
+                // defer hte application of settings until the screen refreshes
+                //Handler handler = new Handler();
+                //handler.postDelayed(new Runnable() {
+                //   public void run() {
+                //      nativeLib.invokeCmdEventCmdString( ID_CMD_APPLY_SETTINGS, m_settingsReturn);
+                // }
+                // }, 100);
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+//                Log.i("DEBUGGER_TAG", "onqtActivityResultGE");
+            }
+
+            return true;
+        }
+
+
+        return true;
+    }
 
     public void setFullscreen(boolean fs) {
         m_fullScreen = fs;
@@ -454,6 +520,108 @@ public class HostManager {
 
     public Activity getActivity() {
         return activity;
+    }
+
+    private static String getLocalizedDateNew(LocalDate date, FormatStyle formatStyle, Locale locale) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(formatStyle).withLocale(locale);
+            return date.format(formatter);
+        }
+        else return "";
+    }
+
+    public String getLocalizedDateTime( String format, int epoch_seconds) {
+        String rv = "";
+        //Log.i("OpenCPN", "gldt_in: " + format + "   " + epoch_seconds);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Get a LocalDateTime object for the epoch_seconds time passed in
+            // WARNING: int epoch_seconds rolls over in 2038
+            Instant instant = Instant.ofEpochSecond(epoch_seconds);
+            //Log.i("OpenCPN", "gldt_An: " + instant.toString());
+
+            ZoneId zoneId = ZoneId.systemDefault(); // Use the device's default time zone
+            // Or specify a specific timezone: ZoneId zoneId = ZoneId.of("America/New_York");
+
+            LocalDateTime localDateTime = instant.atZone(zoneId).toLocalDateTime();
+            Log.i("OpenCPN", "gldt_B: " + localDateTime.toString());
+            LocalDate localDate = localDateTime.toLocalDate();
+            LocalTime time = localDateTime.toLocalTime();
+
+            // branch on the requested format string
+            if (Objects.equals(format, "$short_date")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                rv = localDate.format(formatter);
+            }
+            else if (Objects.equals(format, "$weekday_short_date_time")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                String formattedDate = localDate.format(formatter);
+
+                DateTimeFormatter formatter24 = DateTimeFormatter.ofPattern("HH:mm:ss");
+                String formattedTime = time.format(formatter24);
+
+                rv = formattedDate + "  " + formattedTime;
+            }
+            else if (Objects.equals(format, "$long_date_time")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                String formattedDate = localDate.format(formatter);
+
+                DateTimeFormatter formatter24 = DateTimeFormatter.ofPattern("HH:mm:ss");
+                String formattedTime = time.format(formatter24);
+
+                rv = formattedDate + "  " + formattedTime;
+            }
+            else if (Objects.equals(format, "$long_date")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                rv = localDate.format(formatter);
+            }
+            else if (Objects.equals(format, "$weekday_short_date")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                rv = localDate.format(formatter);
+            }
+            else if (Objects.equals(format, "$short_date_time")) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale.getDefault());
+                String formattedDate = localDate.format(formatter);
+
+                DateTimeFormatter formatter24 = DateTimeFormatter.ofPattern("HH:mm:ss");
+                String formattedTime = time.format(formatter24);
+
+                rv = formattedDate + "  " + formattedTime;
+            }
+            else if (Objects.equals(format, "$24_hour_minutes_seconds")) {
+                DateTimeFormatter formatter24 = DateTimeFormatter.ofPattern("HH:mm:ss");
+                rv = time.format(formatter24);
+            }
+            else if (Objects.equals(format, "$hour_minutes_seconds")) {
+                DateTimeFormatter formatter24 = DateTimeFormatter.ofPattern("hh:mm:ss");
+                rv = time.format(formatter24);
+            }
+        } else {
+            rv = " ";
+        }
+
+        //Log.i("OpenCPN", "gldt_out: " + rv);
+
+        return rv;
+    }
+
+    public String doGRIBActivity(String json) {
+        Log.i("OpenCPN", "doGRIBActivity");
+//        Log.i("DEBUGGER_TAG", json);
+
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("GRIB_PREFS_JSON", json);
+        editor.apply();
+
+        Intent intent = new Intent(activity, org.opencpn.OCPNGRIBActivity.class);
+        activity.startActivityForResult(intent, OCPN_GRIB_REQUEST_CODE);
+
+        int pss = 666;
+        String ret;
+        ret = String.format("%d", pss);
+        return ret;
+
     }
 
     public void relocateOCPNPlugins() {

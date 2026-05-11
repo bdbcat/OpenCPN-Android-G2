@@ -48,7 +48,7 @@ public class AppController {
 
     public void init(Bundle savedInstanceState) {
 
-        hostManager = new HostManager(activity);
+        hostManager = new HostManager(activity, OCPNNativeLib.getInstance());
 
         nativeBridge = new NativeBridgeManager();
 
@@ -290,6 +290,11 @@ public class AppController {
             fileController.safManager.onActivityResult(
                     requestCode, resultCode, data);
         }
+        if ((requestCode >= 6000) && (requestCode < 7000)) {
+            hostManager.onActivityResult(
+                    requestCode, resultCode, data);
+        }
+
     }
 
     // ---------------------------------------------------

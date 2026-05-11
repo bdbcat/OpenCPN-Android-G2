@@ -641,10 +641,10 @@ dependencies {
         //preBuild.dependsOn(copyDASHBOARD_PIFiles)
         //preBuild.dependsOn(copySQUIDDIO_PIFiles)
 
-       // preBuild.dependsOn(copyWMM_PIFiles64)
+        preBuild.dependsOn(copyWMM_PIFiles64)
         preBuild.dependsOn(copyDNLDR_PIFiles64)
-        //preBuild.dependsOn(copyGRIB_PIFiles64)
-        //preBuild.dependsOn(copyDASHBOARD_PIFiles64)
+        preBuild.dependsOn(copyGRIB_PIFiles64)
+        preBuild.dependsOn(copyDASHBOARD_PIFiles64)
         //preBuild.dependsOn(copySQUIDDIO_PIFiles64)
 
         preBuild.dependsOn(copyWMM_PIDataFiles)

@@ -1231,20 +1231,37 @@ public class QtActivity extends Activity
         }
     }
 
-    public String getUnzipStatus(final String dummy) {
-        Log.i("LegacyJNI", "getUnzipStatus()");
+
+
+    public String  getLocalizedDateTime( String format, int epoch_seconds) {
+          Log.i("LegacyJNI", "getLocalizedDateTime()");
+          try {
+           AppController app = getAppControllerShim();
+           if (app == null) {
+               Log.e("LegacyJNI", "AppController null");
+               return "NOK";
+           }
+           return app.hostManager.getLocalizedDateTime(format, epoch_seconds);
+          } catch(Throwable t) {
+           Log.e("LegacyJNI", "getLocalizedDateTime failed", t);
+           return "NOK";
+       }
+   }
+
+    //public String doGRIBActivity(String json)
+    public String  doGRIBActivity(String json) {
+        Log.i("LegacyJNI", "doGRIBActivity()");
         try {
             AppController app = getAppControllerShim();
             if (app == null) {
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.downloadManager.getUnzipStatus(dummy);
+            return app.hostManager.doGRIBActivity(json) ;
         } catch(Throwable t) {
-            Log.e("LegacyJNI", "getUnzipStatus failed", t);
+            Log.e("LegacyJNI", "doGRIBActivity failed", t);
             return "NOK";
         }
     }
-
 
 }

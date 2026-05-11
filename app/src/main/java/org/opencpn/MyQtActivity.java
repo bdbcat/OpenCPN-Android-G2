@@ -40,9 +40,9 @@ public class MyQtActivity extends QtActivity {
     private PreferencesManager preferences;
     private ConnectivityHelper connectivity;
     private UsbController usb;
-    private HostManager hostManager;
+    //private HostManager hostManager;
     private MenuController menuController;
-    private ToolbarController toolbarController;
+    //private ToolbarController toolbarController;
     private String m_nativeLibraryDir;
     private boolean m_trackContinuous;
     private boolean m_inExit = false;
@@ -370,7 +370,7 @@ public class MyQtActivity extends QtActivity {
 
 
     public String disclaimerDialog(final String title, final String message) {
-        return hostManager.disclaimerDialog(title, message);
+        return app.hostManager.disclaimerDialog(title, message);
 
     }
 
