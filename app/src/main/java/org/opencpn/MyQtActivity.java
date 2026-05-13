@@ -46,13 +46,12 @@ public class MyQtActivity extends QtActivity {
     private String m_nativeLibraryDir;
     private boolean m_trackContinuous;
     private boolean m_inExit = false;
-    public static NativeBridgeManager sNativeBridge;
     private OCPNNativeLib nativeLib;
     private FileController fileController;
     private OCPNConnectivityManager connectivityManager;
     public boolean m_hasGPS = false;
     private DownloadManager downloadManager;
-    private AppController app;
+    public AppController app;
 
     /*
     @Override
@@ -360,13 +359,6 @@ public class MyQtActivity extends QtActivity {
     // JNI methods, redirecting to appropriate controllers
 
 
-    //TODO implement in "files" module
-    private String RemoveSystemFile(String filename) {
-        //File f = new File(filename);
-        //f.delete();
-        return "OK";
-
-    }
 
 
     public String disclaimerDialog(final String title, final String message) {

@@ -36,6 +36,8 @@ public class AppController {
 
     private boolean inExit = false;
     private boolean m_inExit;
+    private boolean m_backButtonEnable = true;
+    private AndroidBridge androidBridge;
 
 
     public AppController(Activity activity) {
@@ -48,13 +50,13 @@ public class AppController {
 
     public void init(Bundle savedInstanceState) {
 
-        hostManager = new HostManager(activity, OCPNNativeLib.getInstance());
+        hostManager = new HostManager(activity, OCPNNativeLib.getInstance(),  connectivityManager);
 
         nativeBridge = new NativeBridgeManager();
 
         preferences = new PreferencesManager(activity);
         connectivity = new ConnectivityHelper(activity);
-        connectivityManager = new OCPNConnectivityManager(activity);
+        connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
         usb = new UsbController();
 
@@ -71,16 +73,19 @@ public class AppController {
         menuController = new MenuController(activity, nativeLib);
         toolbarController = new ToolbarController(activity, menuController);
 
+        androidBridge = new AndroidBridge(activity);
+
         // Initialize bridge once
-        AndroidBridge.initialize(
+        androidBridge.initialize(
                 hostManager,
                 menuController,
                 connectivity,
                 fileController,
                 connectivityManager,
                 downloadManager,
-                activity
-        );
+                this,
+                nativeBridge
+                );
 
         OpenCPNBridge.init(activity);
         OpenCPNBridge.getInstance(activity).onCreate(activity.getIntent());
@@ -157,6 +162,10 @@ public class AppController {
  */
         hostManager.relocateOCPNPlugins();
 
+    }
+
+    public AndroidBridge getBridge() {
+        return androidBridge;
     }
 
     // ---------------------------------------------------
@@ -315,6 +324,12 @@ public class AppController {
     private static final long BACK_PRESS_INTERVAL_MS = 3000;
     private long lastBackPressTime = 0;
     private Toast toast;
+
+    public String setBackButtonState(final int isActive) {
+        Log.i("OpenCPN", "setBackButtonState" + isActive);
+        m_backButtonEnable = (isActive != 0);
+        return "OK";
+    }
 
 
     private void handleBackPressedCommon() {

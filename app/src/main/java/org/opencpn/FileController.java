@@ -566,6 +566,12 @@ public class FileController {
     }
 */
 
+    public String RemoveSystemFile(String filename) {
+        File f = new File(filename);
+        f.delete();
+        return "OK";
+    }
+
 
     // SAF interface
     public String ensureTreeAccess(int seq, String treeId) {

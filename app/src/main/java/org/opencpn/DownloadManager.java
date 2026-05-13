@@ -223,6 +223,14 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
         Log.i("OpenCPN", "getDownloadStatus " + String.valueOf(ID) + " " + ret);
         return ret;
     }
+    public String cancelDownload(final int ID) {
+        Log.i("OpenCPN", "cancelDownload " + String.valueOf(ID));
+        //if (m_dm != null) {
+        //    remove(ID);
+        //}
+
+        return "OK";
+    }
 
 
     public String unzipFile(final String source, final String destination, String nStrip, String bRemoveZip) {

@@ -48,6 +48,8 @@ public class MenuController {
     private ImageButton rmdButton;
     private ImageButton overflowButton;
     private View toolbarOverlay;
+    private boolean optionsMenuEnabled;
+    private boolean m_optionsItemActionEnable;
 
     class MenuState {
         boolean trackActive;
@@ -67,6 +69,35 @@ public class MenuController {
         menuState.routeAnnunciatorVisible = false;
     }
 
+    public String enableOptionsMenu(int bEnable) {
+        Log.i("OpenCPN", "enableOptionsMenu " + bEnable);
+        if (bEnable == 1)
+            optionsMenuEnabled = true;
+        else
+            optionsMenuEnabled = false;
+
+        // Can only mess with the UI view if this method is executed from the main UI thread.
+        //  Otherwise, provokes a "CalledFromWrongThreadException"
+        //  But, for some reason, this code don't work...
+/*
+        if(Looper.getMainLooper().getThread() == Thread.currentThread())
+            invalidateOptionsMenu();
+*/
+        // So, do this:
+        activity.runOnUiThread(new Runnable() {
+            public void run() {
+                activity.invalidateOptionsMenu();
+            }
+        });
+        return "OK";
+    }
+
+    public String enableOptionItemAction(final int enable) {
+        Log.i("OpenCPN", "enableOptionItemAction" + enable);
+        m_optionsItemActionEnable = (enable != 0);
+
+        return "OK";
+    }
 
     public void applyOverflowLayout(int nIxons){
 

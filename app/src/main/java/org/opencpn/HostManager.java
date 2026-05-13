@@ -16,6 +16,8 @@ import android.graphics.Point;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
@@ -27,6 +29,7 @@ import android.widget.Button;
 import android.app.AlertDialog;
 import android.view.Surface;
 import android.content.pm.ActivityInfo;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -61,6 +64,7 @@ public class HostManager {
     private final Activity activity;
     private final String m_filesDir;
     private final OCPNNativeLib nativeLib;
+    private final OCPNConnectivityManager connectivityManager;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
@@ -72,11 +76,18 @@ public class HostManager {
     private int insetRight = 0;
     private String m_GRIBReturn;
     private MediaPlayer mediaPlayer;
+    private boolean m_trackContinuous;
+    private boolean m_showRouteAnnunciator;
 
-    public HostManager(Activity activity, OCPNNativeLib nativeLib) {
+    private Toast mTimedToast;
+    private CountDownTimer mtoastCountDown;
+    private boolean ToastTimerRunning = false;
+
+    public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
+        this.connectivityManager = cm;
     }
 
 
@@ -823,6 +834,102 @@ public class HostManager {
             });
 
         }
+        return "OK";
+    }
+
+    public String setTrackContinuous(final int btrack) {
+        m_trackContinuous = (btrack != 0);
+        return "OK";
+    }
+
+    public void doSetFullscreen(final boolean bfull) {
+/*
+        final QtActivityDelegate delegate = QtNative.activityDelegate();
+
+        if (null != delegate) {
+            activity.addContentView(new Runnable() {
+                @Override
+                public void run() {
+                    delegate.setFullScreen(bfull);
+
+                    if (bfull) {
+                        int flags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+
+                        activity.getWindow().getDecorView().setSystemUiVisibility(flags);
+                    }
+
+                }
+            });
+        }
+
+ */
+    }
+
+    public String setFullscreen(final int bfull) {
+        doSetFullscreen(bfull != 0);
+        m_fullScreen = (bfull != 0);
+        return "OK";
+    }
+
+
+    public String getFullscreen() {
+        if (m_fullScreen)
+            return "YES";
+        else
+            return "NO";
+    }
+
+    public String setRouteAnnunciator(final int viz) {
+        m_showRouteAnnunciator = (viz != 0);
+//    if( null != itemRouteAnnunciator)
+        {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+//                    itemRouteAnnunciator.setVisible(viz != 0);
+                    activity.invalidateOptionsMenu();
+                }
+            });
+            return "OK";
+        }
+    }
+
+    public String lastCallOnInit(final int param) {
+        // Do all those things necessary after app initialization, and make ready to run
+        connectivityManager.enableMulticast();
+        return "OK";
+    }
+
+    public String launchWebView(String url) {
+        Log.i("OpenCPN", "launchWebView: " + url);
+
+        Intent intent = new Intent(activity, WebViewActivity.class);
+
+        Bundle b = new Bundle();
+        b.putString(WebViewActivity.SELECTED_URL, url);
+        intent.putExtras(b);
+
+        activity.startActivity(intent);
+        return "OK";
+    }
+
+    public String showToast(final String text) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                // Set the toast
+                mTimedToast = Toast.makeText(activity.getApplicationContext(), text, Toast.LENGTH_LONG);
+                mTimedToast.show();
+
+            }
+        });
+
+
         return "OK";
     }
 

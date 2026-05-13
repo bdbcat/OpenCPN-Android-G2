@@ -1,7 +1,5 @@
 package org.opencpn;
 
-import static org.opencpn.MyQtActivity.sNativeBridge;
-
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.util.Log;
@@ -10,24 +8,31 @@ import android.widget.Toast;
 import org.json.JSONObject;
 
 public class AndroidBridge {
-    private static HostManager hostManager;
-    private static ToolbarController toolbarController;
-    private static ConnectivityHelper connectivityHelper;
-    private static FileController fileController;
-    private static OCPNConnectivityManager connectivityManager;
+    private HostManager hostManager;
+    private ToolbarController toolbarController;
+    private ConnectivityHelper connectivityHelper;
+    private FileController fileController;
+    private OCPNConnectivityManager connectivityManager;
 
-    private static Activity activity;
-    private static DownloadManager downloadManager;
-    private static MenuController menuController;
+    private Activity activity;
+    private DownloadManager downloadManager;
+    private MenuController menuController;
+    private AppController appController;
+    private NativeBridgeManager nativeBridge;
 
-    public static void initialize(
+    public AndroidBridge(Activity activity) {
+        this.activity = activity;
+    }
+
+    public void initialize(
             HostManager hm,
             MenuController mc,
             ConnectivityHelper ch,
             FileController fc,
             OCPNConnectivityManager cm,
             DownloadManager dm,
-            Activity act)
+            AppController ac,
+            NativeBridgeManager nb )
     {
         hostManager = hm;
         menuController = mc;
@@ -35,10 +40,11 @@ public class AndroidBridge {
         fileController = fc;
         connectivityManager = cm;
         downloadManager = dm;
-        activity = act;
+        appController = ac;
+        nativeBridge = nb;
     }
 
-    public static String dispatchCommand(String payload) {
+    public String dispatchCommand(String payload) {
 
         Log.i("OpenCPN", "JNI RX: " + payload);
 
@@ -81,8 +87,8 @@ public class AndroidBridge {
                 }
 
                 case "NOTIFY_QT_READY": {
-                    if (sNativeBridge != null) {
-                        sNativeBridge.setQtReady();
+                    if (nativeBridge != null) {
+                        nativeBridge.setQtReady();
                     }
 
                     JSONObject result = new JSONObject();
@@ -182,21 +188,6 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                case "SHOW_TOAST": {
-
-                    String message = obj.optString("message", "");
-
-                    Toast.makeText(
-                            hostManager.getActivity(),
-                            message,
-                            Toast.LENGTH_SHORT
-                    ).show();
-
-                    JSONObject result = new JSONObject();
-                    result.put("status", "OK");
-
-                    return result.toString();
-                }
 
                 //----------------------------------------------------------------
                 // File management
@@ -476,7 +467,6 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                //public String validateWriteLocation(final String destination, final String dummy, final int chainCode, final int dummyInt) {
 
                     case "VALIDATE_WRITE_LOCATION": {
                     String destination = obj.optString("destination", "");
@@ -490,8 +480,259 @@ public class AndroidBridge {
                 }
 
 
-                default: {
+                case "SET_TRACK_CONTINUOUS": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = hostManager.setTrackContinuous(val);
 
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+
+                case "SET_FULL_SCREEN": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = hostManager.setFullscreen(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+                // TODO move this to menu controller
+                case "SET_ROUTE_ANNUNCIATOR": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = hostManager.setRouteAnnunciator(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+
+                case "ENABLE_BACK_BUTTON": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = appController.setBackButtonState(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+
+                case "LAST_CALL_INIT": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = hostManager.lastCallOnInit(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+                case "START_BT_SCAN": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = "";//startBlueToothScan(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "STOP_BT_SCAN": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = "";//stopBlueToothScan(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+
+                case "GET_BT_SCAN_RESULT": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = "";//getBlueToothScanResults(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "stopBTService": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = "";//stopBTService(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+
+                case "SCAN_SERIAL_PORTS": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = "";//scanSerialPorts(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+
+                case "GET_DOWNLOAD_STATUS": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = downloadManager.getDownloadStatus(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+
+                case "CANCEL_DOWNLOAD": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = downloadManager.cancelDownload(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+
+                case "ENABLE_OPTIONS_MENU": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = menuController.enableOptionsMenu(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+
+                case "ENABLE_ACTIONBAR": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = menuController.enableOptionItemAction(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    return result.toString();
+                }
+
+
+                case "DO_COLOR_PICKER": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = ""; //doColorPickerDialog(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
+                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "LAUNCH_WEB_VIEW": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = hostManager.launchWebView(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "SHOW_TOAST": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = hostManager.showToast(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "START_BT_SERVICE": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = connectivityManager.startBTService(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "SEND_BT_MESSAGE": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = connectivityManager.sendBTMessage(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "STOP_SERIAL_PORT": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = connectivityManager.stopSerialPort(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "GET_UNZIP_STATUS": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = downloadManager.getUnzipStatus(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "REMOVE_SYSTEM_FILE": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = fileController.RemoveSystemFile(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                default: {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");
@@ -520,7 +761,7 @@ public class AndroidBridge {
         }
     }
 
-    public static String dispatchCommandLegacy(String command) {
+    public String dispatchCommandLegacy(String command) {
         Log.i("OpenCPN", "JNI CMD: " + command);
 
         try {
