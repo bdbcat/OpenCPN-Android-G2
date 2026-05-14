@@ -30,7 +30,11 @@ public class FileController {
 
 
     public static final String PREF_CHOOSER_WILD_CARD = "PREF_CHOOSER_WILD_CARD";
+    private static final String PREFS_NAME = "opencpn_storage";
 
+    private static final String PREF_REMEMBER = "remember_storage_location";
+
+    private static final String PREF_LOCATION = "storage_location";
 
 
     private final Activity activity;
@@ -38,7 +42,8 @@ public class FileController {
     public final SafManager safManager;
     private final NativeBridgeManager nativeBridge;
     private static final int BUFFER_SIZE = 1024 * 1024;
-
+    private boolean m_rememberChoice;
+    private String m_exportFile;
     public FileController(Activity activity, OpenCPNBridge bridge, NativeBridgeManager nB) {
         this.activity = activity;
         nativeBridge = nB;
@@ -675,6 +680,70 @@ public class FileController {
             }
         }
         return "OK";
+    }
+
+    public String exportFile(String inFile) {
+        m_exportFile = inFile;
+
+        activity.runOnUiThread(() -> {
+            StorageLocationDialog.show(
+                activity,
+                false,      // false = Export
+                new StorageLocationDialog.Callback() {
+
+                    @Override
+                    public void onLocationSelected(
+                            StorageLocationDialog.StorageLocation location,
+                            boolean rememberChoice) {
+                        m_rememberChoice = rememberChoice;
+
+                        switch (location) {
+
+                            case APP_PRIVATE:
+                                exportToPrivateStorage(m_exportFile);
+                                break;
+
+                            case SHARED_DOCUMENTS:
+                                launchSafExport(m_exportFile);
+                                break;
+
+                            case CANCELLED:
+                                break;
+                        }
+                    }
+                });
+        });
+
+        return "OK";
+    }
+
+    private String exportToPrivateStorage( final String outFile) {
+        persistRememberChoice();
+        return "OK";
+
+    }
+
+    private String launchSafExport( final String outFile) {
+        persistRememberChoice();
+        return "OK";
+
+    }
+
+    private void persistRememberChoice() {
+        SharedPreferences prefs =
+                activity.getSharedPreferences(
+                        PREFS_NAME,
+                        Context.MODE_PRIVATE);
+        if( m_rememberChoice) {
+        prefs.edit()
+                .putBoolean(PREF_REMEMBER, true)
+                .apply();
+        } else {
+            prefs.edit()
+                    .putBoolean(PREF_REMEMBER, false)
+                    .apply();
+
+        }
     }
 
 

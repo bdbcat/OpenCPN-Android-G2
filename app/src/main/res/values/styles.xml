@@ -93,5 +93,11 @@
 
         </style>
 
+    <style name="OpenCPNThemeMaterial"
+        parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="android:itemBackground">#202020</item>
+
+    </style>
+
 
 </resources>
