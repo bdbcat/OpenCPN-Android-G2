@@ -338,8 +338,7 @@ public class AppController {
 
         if (handleOCPNBackButton()) {
             m_inExit = true;
-            //preClose();
-            activity.finish();
+            preClose();
         }
     }
 
@@ -375,5 +374,11 @@ public class AppController {
         nativeLib.ScheduleCleanExit();
     }
 
+    public String finishApp() {
+        Log.i("OpenCPN", "terminateApp");
+        activity.finish();
+        nativeLib.ActivityFinishing();
+        return "";
+    }
 
 }

@@ -98,6 +98,17 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                case "FINISH_APP": {
+                    appController.finishApp();
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", "OK");
+
+                    return result.toString();
+                }
+
+
                 case "GET_SCREEN_ORIENTATION": {
                     String aresult = hostManager.getScreenOrientation();
 
@@ -387,6 +398,8 @@ public class AndroidBridge {
                 }
 
                 case "LAUNCH_HELPBOOK": {
+                    //fileController.exportFile("myfile");
+
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");
