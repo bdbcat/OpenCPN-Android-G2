@@ -745,7 +745,55 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                default: {
+                // wxString result =  callActivityMethod_s2s("startSerialPort", portname, baudRate);
+                case "START_SERIAL_PORT": {
+                    String portname = obj.optString("portname", "");
+                    String baudrate = obj.optString("baudrate", "");
+                    String jResult = connectivityManager.startSerialPort(portname, baudrate);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+            }
+            //wxString result =  callActivityMethod_s2s("writeSerialPort", portname, message);
+            case "WRITE_SERIAL_PORT": {
+                String portname = obj.optString("portname", "");
+                String message = obj.optString("message", "");
+                String jResult = connectivityManager.writeSerialPort(portname, message);
+
+                JSONObject result = new JSONObject();
+                result.put("status", "OK");
+                result.put("payload", jResult);
+                return result.toString();
+            }
+
+            //wxString ir = callActivityMethod_s2s("getAllFilesWithFilespec", dir, filespec);
+            case "GET_FILE_LIST": {
+                String directory = obj.optString("directory", "");
+                String filespec = obj.optString("filespec", "");
+                String jResult = fileController.getAllFilesWithFilespec(directory, filespec);
+
+                JSONObject result = new JSONObject();
+                result.put("status", "OK");
+                result.put("payload", jResult);
+                return result.toString();
+            }
+
+            //activityResult = callActivityMethod_s2s( "migrateFolder", m_migrateSourceFolder, m_migrateDestinationFolder);
+            case "MIGRATE_FOLDER_NOT_YET": {
+                String source = obj.optString("source", "");
+                String destination = obj.optString("destination", "");
+                String jResult = "OK"; //hostManager.sendBTMessage(val);
+
+                JSONObject result = new JSONObject();
+                result.put("status", "OK");
+                result.put("payload", jResult);
+                return result.toString();
+            }
+
+
+            default: {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");

@@ -746,6 +746,48 @@ public class FileController {
         }
     }
 
+    private String getAllFilesResult;
+    private String getAllFilesFilespec;
+
+    public void traverse(File dir) {
+        if (dir.exists()) {
+            File[] files = dir.listFiles();
+            for (int i = 0; i < files.length; ++i) {
+                File file = files[i];
+                if (file.isDirectory()) {
+                    traverse(file);
+                } else {
+                    if (file.getName().matches(getAllFilesFilespec)) {
+
+                        //Log.i("OpenCPN", "traverse:File: " + file.getAbsolutePath());
+                        getAllFilesResult += file.getAbsolutePath() + ";";
+                    }
+                }
+            }
+        }
+    }
+
+    public String getAllFilesWithFilespec(String dir, String filespec) {
+        getAllFilesResult = "";
+
+        int dot_pos = filespec.lastIndexOf(".");
+        if ((dot_pos < filespec.length() - 1) && (dot_pos >= 0)) {
+            try {
+                getAllFilesFilespec = "(.*)[.]" + filespec.substring(dot_pos + 1) + "$";
+                Log.i("OpenCPN", "getAllFilesWithFilespec " + getAllFilesFilespec);
+
+                File dirt = new File(dir);
+                traverse(dirt);
+            } catch (Exception e) {
+                Log.i("OpenCPN", "getAllFilesWithFilespec exception");
+                e.printStackTrace();
+            }
+        }
+
+        return getAllFilesResult;
+    }
+
+
 
 }       // class FileController
 
