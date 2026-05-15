@@ -38,6 +38,7 @@ public class AppController {
     private boolean m_inExit;
     private boolean m_backButtonEnable = true;
     private AndroidBridge androidBridge;
+    private View m_toolbarOverlay;
 
 
     public AppController(Activity activity) {
@@ -49,14 +50,13 @@ public class AppController {
     // ---------------------------------------------------
 
     public void init(Bundle savedInstanceState) {
-
-        hostManager = new HostManager(activity, OCPNNativeLib.getInstance(),  connectivityManager);
-
         nativeBridge = new NativeBridgeManager();
 
         preferences = new PreferencesManager(activity);
         connectivity = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
+
+        hostManager = new HostManager(activity, OCPNNativeLib.getInstance(),  connectivityManager);
 
         usb = new UsbController();
 
@@ -70,7 +70,7 @@ public class AppController {
 
         nativeLib = OCPNNativeLib.getInstance();
 
-        menuController = new MenuController(activity, nativeLib);
+        menuController = new MenuController(activity, nativeLib, this);
         toolbarController = new ToolbarController(activity, menuController);
 
         androidBridge = new AndroidBridge(activity);
@@ -168,6 +168,14 @@ public class AppController {
         return androidBridge;
     }
 
+    public View getToolbarOverlay() {
+        return m_toolbarOverlay;
+    }
+
+    public HostManager getHostManager() {
+        return hostManager;
+    }
+
     // ---------------------------------------------------
     // LIFECYCLE FORWARDING
     // ---------------------------------------------------
@@ -220,20 +228,22 @@ public class AppController {
                             MATCH_PARENT,
                             MATCH_PARENT));
 
-            View toolbarOverlay =
+            m_toolbarOverlay =
                     LayoutInflater.from(activity)
                             .inflate(
                                     R.layout.toolbar_overlay,
                                     container,
                                     false);
 
-            container.addView(toolbarOverlay);
+            container.addView(m_toolbarOverlay);
             container.addView(qtView);
 
             root.addView(container);
 
             // Delegate ALL toolbar behavior
-            menuController.attachToolbar(toolbarOverlay);
+;
+            menuController.attachToolbar(m_toolbarOverlay);
+            menuController.applyButtonState();
 
             // Height reporting
 /*

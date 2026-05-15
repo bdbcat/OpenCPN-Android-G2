@@ -35,7 +35,7 @@ public class OCPNConnectivityManager {
     private boolean m_GPSPermissionRequested;
     public boolean m_hasGPS = true;
 
-    private UsbSerialHelper uSerialHelper;
+    public UsbSerialHelper uSerialHelper;
 
     private WifiManager wifi = null;
     private WifiManager.MulticastLock m_multicastlock = null;

@@ -515,10 +515,9 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                // TODO move this to menu controller
-                case "SET_ROUTE_ANNUNCIATOR": {
+                case "SET_ROUTE_ACTIVE": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.setRouteAnnunciator(val);
+                    String jResult = menuController.setRouteActive(val == 1);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -755,7 +754,7 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", jResult);
                     return result.toString();
-            }
+                }
             //wxString result =  callActivityMethod_s2s("writeSerialPort", portname, message);
             case "WRITE_SERIAL_PORT": {
                 String portname = obj.optString("portname", "");
@@ -793,7 +792,19 @@ public class AndroidBridge {
             }
 
 
-            default: {
+
+                case "DO_ANDROID_SETTINGS": {
+                    String initial_settings = obj.optString("initial_settings", "");
+                    String jResult = hostManager.doAndroidSettings(initial_settings);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+
+                default: {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");

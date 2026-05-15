@@ -1,6 +1,10 @@
 package org.opencpn;
 
+import static org.opencpn.FileController.OCPN_FILEMANAGER_REQUEST_CODE;
+
 import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,6 +17,10 @@ import androidx.appcompat.widget.ListPopupWindow;
 
 import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.bindings.QtActivity;
+
+import java.io.File;
+
+import bms.ocpnfilemanager.activity.FileManagerActivity;
 
 public class MenuController {
     private final static int OCPN_ACTION_FOLLOW = 0x1000;
@@ -32,12 +40,16 @@ public class MenuController {
 
     private final Activity activity;
     private final OCPNNativeLib nativeLib;
+    private final AppController app;
     private MenuItem itemRouteAnnunciator;
     private MenuItem itemRouteMenuItem;
     private MenuItem itemFollowActive;
     private MenuItem itemFollowActiveBlue;
     private MenuItem itemFollowActiveGreen;
     private MenuItem itemFollowInActive;
+
+    private MenuItem itemRouteCreate;
+    private MenuItem itemRouteCreateActive;
     private MenuItem itemTrackActive;
     private MenuItem itemTrackInActive;
     private int m_nFollowState = 1;
@@ -50,22 +62,26 @@ public class MenuController {
     private View toolbarOverlay;
     private boolean optionsMenuEnabled;
     private boolean m_optionsItemActionEnable;
+    private Menu m_menu;
 
     class MenuState {
         boolean trackActive;
         int followState;
+        boolean routeActiveState;
         boolean routeAnnunciatorVisible;
     }
     private MenuState menuState;
 
 
-    public MenuController(Activity activity, OCPNNativeLib nativeLib) {
+    public MenuController(Activity activity, OCPNNativeLib nativeLib, AppController app) {
         this.activity = activity;
         this.nativeLib = nativeLib;
+        this.app = app;
     
         menuState = new MenuState();
         menuState.trackActive = false;
         menuState.followState = 0;
+        menuState.routeActiveState = false;
         menuState.routeAnnunciatorVisible = false;
     }
 
@@ -184,6 +200,10 @@ public class MenuController {
 
     private void showOverflow(View anchor) {
 
+        //TODO verify this
+        if (!m_optionsItemActionEnable)          // option items may be disabled by core
+            return;
+
         PopupMenu popup =
                 new PopupMenu(activity, anchor);
 
@@ -191,7 +211,8 @@ public class MenuController {
                 R.menu.popup_menu,
                 popup.getMenu());
 
-        applyMenuState(popup.getMenu());
+        m_menu = popup.getMenu();
+        applyMenuState(m_menu);
 
         popup.setOnMenuItemClickListener(
                 item -> handle(item));
@@ -201,19 +222,58 @@ public class MenuController {
 
     public boolean handle(MenuItem item) {
 
-        switch (item.getItemId()) {
+        int id = item.getItemId();
 
-            case R.id.ocpn_action_follow:
-                //Log.i("DEBUGGER_TAG", "Invoke OCPN_ACTION_FOLLOW while in-active");
-                nativeLib.invokeMenuItem(OCPN_ACTION_FOLLOW);
+        switch (item.getItemId()) {
+            case R.id.ocpn_action_createroute:
+                nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
                 return true;
 
-            case R.id.ocpn_action_routemanager:
-                //onRouteManagerPressed();
+            case R.id.ocpn_route_create_active:             // exiting Route Create mode
+                nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
+                return true;
+
+            case R.id.ocpn_action_encText:
+                nativeLib.invokeMenuItem(OCPN_ACTION_ENCTEXT_TOGGLE);
+                return true;
+
+            case R.id.ocpn_action_encSoundings:
+                nativeLib.invokeMenuItem(OCPN_ACTION_ENCSOUNDINGS_TOGGLE);
+                return true;
+
+            case R.id.ocpn_action_encLights:
+                nativeLib.invokeMenuItem(OCPN_ACTION_ENCLIGHTS_TOGGLE);
+                return true;
+
+            case R.id.ocpn_action_tides:
+                nativeLib.invokeMenuItem(OCPN_ACTION_TIDES_TOGGLE);
+                return true;
+
+            case R.id.ocpn_action_currents:
+                nativeLib.invokeMenuItem(OCPN_ACTION_CURRENTS_TOGGLE);
                 return true;
 
             case R.id.ocpn_action_mob:
-                //onMobPressed();
+                nativeLib.invokeMenuItem(OCPN_ACTION_MOB);
+                return true;
+
+            case R.id.ocpn_action_googlemaps:
+                app.getHostManager().invokeGoogleMaps();
+                return true;
+
+            case R.id.ocpn_action_filemanager:
+                File dir = activity.getExternalFilesDir(null);
+                Uri startUri = Uri.fromFile(dir);
+                Intent intent = new Intent("OPEN", startUri, activity, FileManagerActivity.class);
+                activity.startActivityForResult(intent, OCPN_FILEMANAGER_REQUEST_CODE);
+                return true;
+
+            case R.id.ocpn_action_toggle_fullscreen:
+                app.getHostManager().toggleFullscreen();
+                return true;
+
+            case R.id.ocpn_action_settings_basic:
+                nativeLib.invokeMenuItem(OCPN_ACTION_SETTINGS_BASIC);
                 return true;
 
             default:
@@ -233,6 +293,11 @@ public class MenuController {
         return "OK";
     }
 
+    public String setRouteActive(boolean active) {
+        menuState.routeActiveState = active;
+        applyMenuState(m_menu);
+        return "OK";
+    }
 
     void applyButtonState() {
         switch (menuState.followState) {
@@ -246,69 +311,24 @@ public class MenuController {
         if (menuState.trackActive) { trackButton.setImageResource(R.drawable.trackon); }
         else { trackButton.setImageResource(R.drawable.trackoff); }
 
+
+        // Route Button not visible
+        setToolbarButtonVisible(R.id.btn_route, false);
+
     }
 
     public void applyMenuState(Menu menu) {
-        activity.getMenuInflater().inflate(R.menu.popup_menu, menu);
 
-        itemRouteAnnunciator = menu.findItem(R.id.ocpn_route_create_active);
-        if (null != itemRouteAnnunciator) {
-            itemRouteAnnunciator.setVisible(menuState.routeAnnunciatorVisible);
+        // Route item
+        itemRouteCreate = menu.findItem(R.id.ocpn_action_createroute);
+        if (null != itemRouteCreate) {
+            itemRouteCreate.setVisible(!menuState.routeActiveState);
+        }
+        itemRouteCreateActive = menu.findItem(R.id.ocpn_route_create_active);
+        if (null != itemRouteCreateActive) {
+            itemRouteCreateActive.setVisible(menuState.routeActiveState);
         }
 
-        itemRouteMenuItem = menu.findItem(R.id.ocpn_action_createroute);
-        if (null != itemRouteMenuItem) {
-            itemRouteMenuItem.setVisible(!menuState.routeAnnunciatorVisible);
-        }
-/*
-        // No need for duplicate images
-        //follow.setImageResource(R.drawable.follow_active_green);
-
-        //ImageButton follow = menu.findItem(R.id.btn_follow);
-        ImageButton follow =
-                toolbarOverlay.findViewById(R.id.btn_follow);
-
-        follow.setImageResource(
-                R.drawable.follow_active_green);
-
-        switch (menuState.followState) {
-            case 0:
-                follow.setImageResource(R.drawable.follow_active_green);
-                itemFollowActive.setVisible(false);
-                itemFollowActiveGreen.setVisible(false);
-                itemFollowActiveBlue.setVisible(false);
-                itemFollowInActive.setVisible(true);
-           
-        }
-
-        // Auto follow icon
-        itemFollowActive = menu.findItem(R.id.ocpn_action_follow_active);
-        itemFollowActiveGreen = menu.findItem(R.id.ocpn_action_follow_active_green);
-        itemFollowActiveBlue = menu.findItem(R.id.ocpn_action_follow_active_blue);
-        itemFollowInActive = menu.findItem(R.id.ocpn_action_follow);
-
-        if (menuState.followState == 0)  {
-            itemFollowInActive.setVisible(true);
-            itemFollowActive.setVisible(false);
-            itemFollowActiveGreen.setVisible(false);
-            itemFollowActiveBlue.setVisible(false);
-        } else if (menuState.followState == 1) {
-            itemFollowInActive.setVisible(false);
-            itemFollowActive.setVisible(false);
-            itemFollowActiveGreen.setVisible(true);
-            itemFollowActiveBlue.setVisible(false);
-        } else if (menuState.followState == 2) {
-            itemFollowInActive.setVisible(false);
-            itemFollowActive.setVisible(false);
-            itemFollowActiveGreen.setVisible(false);
-            itemFollowActiveBlue.setVisible(true);
-        } else {
-            itemFollowInActive.setVisible(false);
-            itemFollowActive.setVisible(false);
-            itemFollowActiveGreen.setVisible(false);
-            itemFollowActiveBlue.setVisible(false);
-        }
-*/
         // Track icon
         itemTrackActive = menu.findItem(R.id.ocpn_action_track_toggle_ison);
         if (null != itemTrackActive) {
@@ -325,6 +345,15 @@ public class MenuController {
 
     }
 
+    private void setToolbarButtonVisible(int id, boolean visible)
+    {
 
+        View v =  app.getToolbarOverlay().findViewById(id);
+
+        if (v != null) {
+            v.setVisibility(
+                    visible ? View.VISIBLE : View.GONE);
+        }
+    }
 
 }

@@ -35,7 +35,7 @@ public class FileController {
     private static final String PREF_REMEMBER = "remember_storage_location";
 
     private static final String PREF_LOCATION = "storage_location";
-
+    public static final int OCPN_FILEMANAGER_REQUEST_CODE = 5564;
 
     private final Activity activity;
     //private final AndroidBridge bridge;

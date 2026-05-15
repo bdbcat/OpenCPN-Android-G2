@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -55,11 +56,17 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.StringTokenizer;
 
 public class HostManager {
 
     private static final int OCPN_GRIB_REQUEST_CODE = 6000;
+    private final static int OCPN_SETTINGS_REQUEST_CODE = 6002;
+    private final static int OCPN_GOOGLEMAPS_REQUEST_CODE = 6004;
     private final static int ID_CMD_POST_JSON_TO_PLUGINS = 304;
+    private final static int ID_CMD_APPLY_SETTINGS = 300;
+    private final static int ID_CMD_NULL_REFRESH = 301;
+    private final static int ID_CMD_SETVP = 303;
 
     private final Activity activity;
     private final String m_filesDir;
@@ -82,6 +89,11 @@ public class HostManager {
     private Toast mTimedToast;
     private CountDownTimer mtoastCountDown;
     private boolean ToastTimerRunning = false;
+    private String m_scannedSerial;
+    private String m_settingsReturn;
+    private double m_gminitialZoom;
+    private double m_gminitialLat = 0.0;
+    private double m_gminitialLon = 0.0;
 
     public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
@@ -133,13 +145,74 @@ public class HostManager {
 
             return true;
         }
+        if (requestCode == OCPN_SETTINGS_REQUEST_CODE) {
+            // Make sure the request was successful
+            if (resultCode == Activity.RESULT_OK) {
+                m_settingsReturn = data.getStringExtra("SettingsString");
+                Log.i("OpenCPN", "onActivityResult.SettingsString: " + m_settingsReturn);
+                nativeLib.invokeCmdEventCmdString(ID_CMD_NULL_REFRESH, m_settingsReturn);
+
+                // defer hte application of settings until the screen refreshes
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        nativeLib.invokeCmdEventCmdString(ID_CMD_APPLY_SETTINGS, m_settingsReturn);
+                    }
+                }, 500);
+
+                //  Apply any Android private settings
+                applyAndroidPreferences();
+            }
+
+            return true;
+        }
+        if (requestCode == OCPN_GOOGLEMAPS_REQUEST_CODE) {
+            // Make sure the request was successful
+            if (resultCode == Activity.RESULT_OK) {
+                String finalPosition = data.getStringExtra("finalPosition");
+//                Log.i("DEBUGGER_TAG", "finalPositionFromMaps " + finalPosition);
+
+                StringTokenizer tkz = new StringTokenizer(finalPosition, ";");
+
+                String finalLat = finalPosition.valueOf(m_gminitialLat);
+                String finalLon = finalPosition.valueOf(m_gminitialLon);
+                String finalZoom = finalPosition.valueOf(m_gminitialZoom);
+                String zoomFactor = "1.0";
+
+                if (tkz.hasMoreTokens()) {
+                    finalLat = tkz.nextToken();
+                    finalLon = tkz.nextToken();
+                    finalZoom = tkz.nextToken();
+                    zoomFactor = tkz.nextToken();
+                }
+
+                double zoomF = Double.parseDouble(zoomFactor);
+                finalZoom = String.valueOf(m_gminitialZoom * zoomF);
 
 
-        return true;
-    }
+                String vpSet = "";
 
-    public void setFullscreen(boolean fs) {
-        m_fullScreen = fs;
+                vpSet = vpSet.concat(finalLat);
+                vpSet = vpSet.concat(";");
+                vpSet = vpSet.concat(finalLon);
+                vpSet = vpSet.concat(";");
+                vpSet = vpSet.concat(finalZoom);
+                vpSet = vpSet.concat(";");
+
+
+                Log.i("DEBUGGER_TAG", "finalPositionString " + vpSet);
+
+                nativeLib.invokeCmdEventCmdString(ID_CMD_SETVP, vpSet);
+
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+//                Log.i("DEBUGGER_TAG", "onqtActivityResultE");
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     public void setInsets(android.graphics.Insets insets) {
@@ -843,12 +916,11 @@ public class HostManager {
     }
 
     public void doSetFullscreen(final boolean bfull) {
-/*
+
         final QtActivityDelegate delegate = QtNative.activityDelegate();
 
         if (null != delegate) {
-            activity.addContentView(new Runnable() {
-                @Override
+            activity.runOnUiThread(new Runnable() {
                 public void run() {
                     delegate.setFullScreen(bfull);
 
@@ -865,8 +937,10 @@ public class HostManager {
                 }
             });
         }
+    }
 
- */
+    public void setFullscreen(boolean fs) {
+        m_fullScreen = fs;
     }
 
     public String setFullscreen(final int bfull) {
@@ -932,6 +1006,109 @@ public class HostManager {
 
         return "OK";
     }
+
+    public void toggleFullscreen() {
+        m_fullScreen = !m_fullScreen;
+        if (m_fullScreen) setFullscreen(1);
+        else setFullscreen(0);
+        nativeLib.notifyFullscreenChange(m_fullScreen);
+    }
+
+    public String doAndroidSettings(String settings) {
+        if (null != connectivityManager.uSerialHelper)
+            m_scannedSerial = connectivityManager.scanSerialPorts(UsbSerialHelper.NOSCAN);      // No scan, just report latest results.
+
+        m_settingsReturn = new String();
+
+        Intent intent = new Intent(activity, org.opencpn.OCPNSettingsActivity.class);
+        intent.putExtra("SETTINGS_STRING", settings);
+        intent.putExtra("DETECTEDSERIALPORTS_STRING", m_scannedSerial);
+        Log.i("OpenCPN", "doAndroidSettings settings" + settings);
+        Log.i("OpenCPN", "doAndroidSettings m_scannedSerial" + m_scannedSerial);
+
+        activity.startActivityForResult(intent, OCPN_SETTINGS_REQUEST_CODE);
+
+        return "55";
+    }
+
+    public String checkAndroidSettings() {
+        return m_settingsReturn;
+    }
+
+    public void applyAndroidPreferences() {
+        //  Apply any Android private settings
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
+
+        Boolean bnoSleep = preferences.getBoolean("prefb_noSleep", false);
+        if (bnoSleep)
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else
+            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        m_trackContinuous = preferences.getBoolean("prefb_trackOnPause", false);
+    }
+
+    public String invokeGoogleMaps() {
+        Log.i("DEBUGGER_TAG", "invokeGoogleMaps");
+
+        Intent intent = new Intent(activity, org.opencpn.OCPNMapsActivity.class);
+
+        String s = nativeLib.getVPCorners();
+        if (s.isEmpty()) {
+            Log.i("DEBUGGER_TAG", "invokeGoogleMaps..Error, empty VPCorners");
+            return "66";
+        }
+
+        // Validate the viewport "corners" string
+        try {
+            StringTokenizer tkz = new StringTokenizer(s, ";");
+            String tk = tkz.nextToken();
+            double latne = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double lonne = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double latsw = Double.parseDouble(tk);
+
+            tk = tkz.nextToken();
+            double lonsw = Double.parseDouble(tk);
+        } catch (Exception e) {
+            Log.i("DEBUGGER_TAG", "invokeGoogleMaps..Error, Invalid VPCorners");
+            return "66";
+        }
+
+
+        String v = nativeLib.getVPS();
+        Log.i("DEBUGGER_TAG", "initialPositionString" + v);
+
+        StringTokenizer tkz = new StringTokenizer(v, ";");
+
+        String initialLat = "";
+        String initialLon = "";
+        String initialZoom = "";
+
+        if (tkz.hasMoreTokens()) {
+            initialLat = tkz.nextToken();
+            initialLon = tkz.nextToken();
+            initialZoom = tkz.nextToken();
+        }
+
+        m_gminitialZoom = Double.parseDouble(initialZoom);
+
+        intent.putExtra("VP_CORNERS", s);
+        intent.putExtra("VPS", v);
+
+        int height = activity.getWindow().getDecorView().getHeight();
+        int width = activity.getWindow().getDecorView().getWidth();
+        intent.putExtra("WIDTH", width);
+        intent.putExtra("HEIGHT", height);
+
+        activity.startActivityForResult(intent, OCPN_GOOGLEMAPS_REQUEST_CODE);
+
+        return "56";
+    }
+
 
 
 }
