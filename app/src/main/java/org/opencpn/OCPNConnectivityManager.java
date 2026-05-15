@@ -8,14 +8,25 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
 import app.akexorcist.bluetotohspp.library.BluetoothState;
+import java.io.BufferedReader;
+import java.net.URL;
+
+import javax.net.ssl.HttpsURLConnection;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 
 
 public class OCPNConnectivityManager {
@@ -46,6 +57,8 @@ public class OCPNConnectivityManager {
     private Boolean m_BTServiceCreated = false;
     private String m_BTStat;
     private String m_scannedSerial;
+    private boolean g_postActive;
+    private String g_postResult;
 
 
     public  OCPNConnectivityManager(Activity avtivity, OCPNNativeLib nl) {
@@ -448,6 +461,182 @@ public class OCPNConnectivityManager {
             return "NOK";
         return uSerialHelper.writeUSBSerialPort(name, message);
 
+    }
+
+    //-----------------------------------------------------------------------------
+    //  HTTP support
+    //-----------------------------------------------------------------------------
+
+    public String doHttpPostAsync(final String url, final String encodedData, final String timeoutMsec) {
+        //Log.i("OpenCPN", "doHttpPostAsync start ");
+        // Clear the data
+        g_postActive = false;
+        g_postResult = "";
+
+        new PostTask().execute(url, encodedData, "20000");
+
+        return "OK";
+    }
+
+    public String checkPostAsync() {
+        if (g_postActive)
+            return "ACTIVE";
+        else
+            return g_postResult;
+    }
+
+    class PostTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... arg0) {
+
+            g_postActive = true;
+            //Log.i("OpenCPN", "POST url: " + arg0[0]);
+            //Log.i("OpenCPN", "POST parms: " + arg0[1]);
+
+            OutputStreamWriter out = null;
+            DataOutputStream dataout = null;
+            BufferedReader in = null;
+            StringBuilder result = new StringBuilder();
+
+            int timeout = 4950;
+            try {
+                timeout = Integer.parseInt(arg0[2]);
+            } catch (NumberFormatException nfe) {
+                // Handle parse error.
+                nfe.printStackTrace();
+                Log.i("OpenCPN", "Timeout value parse exception");
+            }
+
+            try {
+                URL url = new URL(arg0[0]);
+
+                // On older devices, we need to explicitly enable TLS v1.2 on https connections
+
+                if ((url.getProtocol().equalsIgnoreCase("https")) &&
+                        (Build.VERSION.SDK_INT >= 16 && Build.VERSION.SDK_INT < 22)) {
+
+                    HttpsURLConnection surl = (HttpsURLConnection) url.openConnection();
+
+                    // Force a TLSv1.2 connection
+                    MySSLSocketFactory myFact = new MySSLSocketFactory(surl.getSSLSocketFactory());
+                    surl.setSSLSocketFactory(myFact);
+
+                    surl.setRequestMethod("POST");
+                    surl.setDoOutput(true);
+                    surl.setDoInput(true);
+                    surl.setUseCaches(false);
+                    surl.setAllowUserInteraction(false);
+                    //surl.setRequestProperty(HEADER_USER_AGENT, HEADER_USER_AGENT_VALUE);
+                    surl.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    surl.setConnectTimeout(timeout);
+                    surl.setReadTimeout(timeout);
+
+                    dataout = new DataOutputStream(surl.getOutputStream());
+
+                    // perform POST operation
+                    //Log.i("OpenCPN", "doin it...");
+
+                    dataout.writeBytes(arg0[1]);
+
+                    int responseCode = surl.getResponseCode();
+                    Log.i("OpenCPN", "AsyncTask HTTPPOST Response code: " + Integer.toString(responseCode));
+
+                    in = new BufferedReader(new InputStreamReader(surl.getInputStream()), 8096);
+                    String response;
+                    // write html to System.out for debug
+                    while ((response = in.readLine()) != null) {
+                        //Log.i("OpenCPN", response);
+                        result.append(response);
+                    }
+
+                    in.close();
+                    surl.disconnect();
+
+                } else {
+                    HttpURLConnection urlc = null;
+                    urlc = (HttpURLConnection) url.openConnection();
+                    urlc.setRequestMethod("POST");
+                    urlc.setDoOutput(true);
+                    urlc.setDoInput(true);
+                    urlc.setUseCaches(false);
+                    urlc.setAllowUserInteraction(false);
+                    //urlc.setRequestProperty(HEADER_USER_AGENT, HEADER_USER_AGENT_VALUE);
+                    urlc.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                    urlc.setConnectTimeout(timeout);
+                    urlc.setReadTimeout(timeout);
+
+                    dataout = new DataOutputStream(urlc.getOutputStream());
+
+                    // perform POST operation
+                    //Log.i("OpenCPN", "doin it...");
+
+                    dataout.writeBytes(arg0[1]);
+
+                    int responseCode = urlc.getResponseCode();
+                    Log.i("OpenCPN", "AsyncTask HTTPPOST Response code: " + Integer.toString(responseCode));
+
+                    in = new BufferedReader(new InputStreamReader(urlc.getInputStream()));
+                    char[] buffer = new char[10000];
+                    int nbCharRead = 0;
+                    String response = "";
+                    try {
+                        while ((nbCharRead = in.read(buffer, 0, 10000)) != -1) {
+                            String chunk = new String(buffer, 0, nbCharRead);
+                            result.append(chunk);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i("OpenCPN", "AsyncTask IOException 0", e);
+                        result = new StringBuilder("NOK:0:");
+                        result.append(e.getMessage());
+                    } finally {
+                        urlc.disconnect();
+                    }
+
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.i("OpenCPN", "AsyncTask IOException 1", e);
+                result = new StringBuilder("NOK:1:");
+                result.append(e.getMessage());
+            } finally {
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i("OpenCPN", "AsyncTask IOException 2", e);
+                        result = new StringBuilder("NOK:2:");
+                        result.append(e.getMessage());
+                    }
+                }
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.i("OpenCPN", "Exception 3", e);
+                        result = new StringBuilder("NOK:3:");
+                        result.append(e.getMessage());
+                    }
+                }
+            }
+
+            //Log.i("OpenCPN", "async result: " + result);
+
+            return result.toString();
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+
+            g_postResult = result;
+            g_postActive = false;
+        }
     }
 
 

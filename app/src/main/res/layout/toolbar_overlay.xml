@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:background="#020202"
+    android:background="#202020"
     android:paddingStart="4dp"
     android:paddingEnd="4dp">
 
@@ -41,44 +41,40 @@
 
     <ImageButton
         android:id="@+id/btn_follow"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:src="@drawable/follow"
         android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:contentDescription="Follow"/>
 
     <ImageButton
         android:id="@+id/btn_rmd"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:src="@drawable/route_manager"
         android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:contentDescription="Route Manager"/>
 
     <ImageButton
         android:id="@+id/btn_track"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:src="@drawable/trackoff"
         android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:contentDescription="Track"/>
 
     <ImageButton
         android:id="@+id/btn_route"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:src="@drawable/route"
         android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:contentDescription="Route"/>
@@ -87,11 +83,10 @@
 
     <ImageButton
         android:id="@+id/btn_overflow"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:src="@drawable/ic_more_vert"
         android:background="@android:color/transparent"
-        android:scaleType="fitCenter"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:contentDescription="More"/>

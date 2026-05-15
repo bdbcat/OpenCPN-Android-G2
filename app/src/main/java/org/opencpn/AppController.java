@@ -39,6 +39,7 @@ public class AppController {
     private boolean m_backButtonEnable = true;
     private AndroidBridge androidBridge;
     private View m_toolbarOverlay;
+    private MigrateController migrateController;
 
 
     public AppController(Activity activity) {
@@ -313,6 +314,12 @@ public class AppController {
             hostManager.onActivityResult(
                     requestCode, resultCode, data);
         }
+        if ((requestCode >= 7000) && (requestCode < 8000)) {
+            if(migrateController != null) {
+                migrateController.onActivityResult(
+                        requestCode, resultCode, data);
+            }
+        }
 
     }
 
@@ -389,6 +396,31 @@ public class AppController {
         activity.finish();
         nativeLib.ActivityFinishing();
         return "";
+    }
+
+    //---------------------------------------------------------------
+    // Chart migrator support
+    //-----------------------------------------------------------------
+    public String doMigrateSetup() {
+        migrateController = new MigrateController(activity, this);
+        return migrateController.migrateSetup();
+
+    }
+
+    public String isMigrateSAFChooserFinished() {
+        return migrateController.isSAFChooserFinished();
+    }
+
+    public String migrateFolder(String source, String destination) {
+        return migrateController.migrateFolder(source, destination);
+    }
+
+    public String getMigrateStatus() {
+        return migrateController.getMigrateStatus();
+    }
+
+    public String restartOCPNAfterMigrate() {
+        return migrateController.restartOCPNAfterMigrate();
     }
 
 }

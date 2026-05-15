@@ -454,29 +454,26 @@ public class AndroidBridge {
                 }
 
                 case "MIGRATE_SETUP": {
+                    String jResult =  appController.doMigrateSetup();
                     JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
-
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
                     return result.toString();
                 }
 
-                case "GET_MIGRATE_STATUS": {
+                case "IS_MIGRATE_SAF_PERM_END": {
+                    String jResult = appController.isMigrateSAFChooserFinished();
                     JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
-
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
                     return result.toString();
                 }
 
                 case "RESTART_AFTER_MIGRATE": {
+                    String jResult = appController.restartOCPNAfterMigrate();
                     JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
-
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
                     return result.toString();
                 }
 
@@ -779,11 +776,11 @@ public class AndroidBridge {
                 return result.toString();
             }
 
-            //activityResult = callActivityMethod_s2s( "migrateFolder", m_migrateSourceFolder, m_migrateDestinationFolder);
-            case "MIGRATE_FOLDER_NOT_YET": {
+
+            case "MIGRATE_FOLDER": {
                 String source = obj.optString("source", "");
                 String destination = obj.optString("destination", "");
-                String jResult = "OK"; //hostManager.sendBTMessage(val);
+                String jResult = appController.migrateFolder(source, destination);
 
                 JSONObject result = new JSONObject();
                 result.put("status", "OK");
@@ -791,9 +788,17 @@ public class AndroidBridge {
                 return result.toString();
             }
 
+            case "GET_MIGRATE_STATUS": {
+                    String jResult = appController.getMigrateStatus();
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+            }
 
 
-                case "DO_ANDROID_SETTINGS": {
+            case "DO_ANDROID_SETTINGS": {
                     String initial_settings = obj.optString("initial_settings", "");
                     String jResult = hostManager.doAndroidSettings(initial_settings);
 
@@ -801,16 +806,26 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", jResult);
                     return result.toString();
+            }
+             case "HTTP_POST_ASYNC": {
+                    String url = obj.optString("url", "");
+                    String parms = obj.optString("parms", "");
+                    String stimeout = obj.optString("stimeout", "");
+                    //Todo  Fix me, test
+                    String jResult = "OK"; //connectivityManager.doHttpPostAsync(url, parms, stimeout);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
                 }
-
-
-                default: {
+//
+            default: {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");
-
                     return result.toString();
-                }
+            }
             }
         }
         catch(Exception e) {
