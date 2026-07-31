@@ -4,6 +4,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -40,7 +41,7 @@ public class AppController {
     private AndroidBridge androidBridge;
     private View m_toolbarOverlay;
     private MigrateController migrateController;
-
+    private ProcessController processController;
 
     public AppController(Activity activity) {
         this.activity = activity;
@@ -101,6 +102,8 @@ public class AppController {
         usb.initIfAvailable(activity);
 
         nativeLib = OCPNNativeLib.getInstance();
+
+        processController = new ProcessController(activity);
 
         // Register back button callback
         if (Build.VERSION.SDK_INT >= 33) {
@@ -177,6 +180,18 @@ public class AppController {
         return hostManager;
     }
 
+    public FileController getFileController() {
+        return fileController;
+    }
+
+    public DownloadManager getDownloadManager() {
+        return downloadManager;
+    }
+
+    public ProcessController getProcessController() {
+        return processController;
+    }
+
     // ---------------------------------------------------
     // LIFECYCLE FORWARDING
     // ---------------------------------------------------
@@ -201,7 +216,6 @@ public class AppController {
 
     public void onDestroy() {
         connectivity.cleanup();
-        nativeBridge.onDestroy();
     }
 
     // ---------------------------------------------------
@@ -263,24 +277,6 @@ public class AppController {
         }
     }
 
-    // ---------------------------------------------------
-    // BACK / EXIT
-    // ---------------------------------------------------
-
-    public boolean handleBack() {
-
-        if (inExit) return true;
-
-/*
-        if (toolbarController.handleBack()) {
-            inExit = true;
-            nativeLib.ScheduleCleanExit();
-            return true;
-        }
-
- */
-        return false;
-    }
 
     public void shutdown() {
         inExit = true;
@@ -348,18 +344,21 @@ public class AppController {
         return "OK";
     }
 
-
-    private void handleBackPressedCommon() {
-        if (m_inExit)
-            return;
-
-        if (handleOCPNBackButton()) {
-            m_inExit = true;
-            preClose();
-        }
+    // Handle Back Button on Android < 16
+    // n.b. Android 16+ uses OnBackInvokedDispatcher
+    public boolean handleBack() {
+        handleBackPressedCommon();
+        return true;
     }
 
     boolean handleOCPNBackButton() {
+        if (!m_backButtonEnable)
+            return false;
+
+        Log.i("OpenCPN", "TLWCount " + nativeLib.getTLWCount());
+
+        if (nativeLib.getTLWCount() > 1)
+            return false;
 
         long now = System.currentTimeMillis();
 
@@ -387,16 +386,38 @@ public class AppController {
 
         return true;
     }
+
+    private void handleBackPressedCommon() {
+        if (m_inExit)
+            return;
+
+        if (handleOCPNBackButton()) {
+            m_inExit = true;
+            preClose();
+        }
+    }
+
     void preClose(){
+        connectivityManager.quickStopGpsService();
         nativeLib.ScheduleCleanExit();
     }
 
-    public String finishApp() {
-        Log.i("OpenCPN", "terminateApp");
+    void finishApp() {
+        Log.i("OpenCPN", "finishApp");
         activity.finish();
-        nativeLib.ActivityFinishing();
-        return "";
     }
+
+ public String DisableRotation() {
+        //TODO investigate
+ //       activity.lockActivityOrientation(this);
+        return "OK";
+    }
+
+    public String EnableRotation() {
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        return "OK";
+    }
+
 
     //---------------------------------------------------------------
     // Chart migrator support

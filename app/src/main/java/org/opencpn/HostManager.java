@@ -3,7 +3,11 @@ package org.opencpn;
 
 import static org.opencpn.UIThreadHelper.runOnUiThread;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +17,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
@@ -26,6 +31,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.app.AlertDialog;
 import android.view.Surface;
@@ -37,6 +43,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencpn.opencpn.BuildConfig;
+import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.QtActivityDelegate;
 import org.qtproject.qt5.android.QtNative;
 
@@ -57,6 +64,7 @@ import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.concurrent.Semaphore;
 
 public class HostManager {
 
@@ -94,6 +102,8 @@ public class HostManager {
     private double m_gminitialZoom;
     private double m_gminitialLat = 0.0;
     private double m_gminitialLon = 0.0;
+    private Semaphore mutexC;
+    private ProgressDialog ringProgressDialog = null;
 
     public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
@@ -1108,6 +1118,134 @@ public class HostManager {
 
         return "56";
     }
+
+    public String showHTMLAlertDialog(String title, String htmlString) {
+
+        WebView wv = new WebView(activity.getApplicationContext());
+
+        wv.getSettings().setLoadWithOverviewMode(true);
+        wv.getSettings().setUseWideViewPort(true);
+        wv.getSettings().setMinimumFontSize(50);
+        wv.loadData(htmlString, "text/html; charset=UTF-8", null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(activity, AlertDialog.THEME_HOLO_LIGHT);
+
+        // set title
+        alertDialogBuilder.setTitle(title);
+
+        // set dialog message
+        alertDialogBuilder
+                .setView(wv)
+                .setCancelable(false)
+                .setNegativeButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // if this button is clicked, just close
+                        // the dialog box and do nothing
+                        dialog.cancel();
+                    }
+                });
+
+        //                     alertDialogBuilder.setPositiveButton("Cancel",new DialogInterface.OnClickListener() {
+        //                             public void onClick(DialogInterface dialog,int id) {
+        // if this button is clicked, close
+        // current activity
+        //                                     QtActivity.this.finish();
+        //                             }
+        //                       });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+
+        // show it
+        alertDialog.show();
+
+        return ("OK");
+    }
+
+    public String showBusyCircle() {
+        //if(!m_fullScreen)
+
+        {
+
+            mutexC = new Semaphore(0);
+
+            activity.runOnUiThread(new Runnable() {
+
+                @Override
+                public void run() {
+
+                    if (null == ringProgressDialog) {
+                        Log.i("OpenCPN", "ShowBusyBuild");
+                        ringProgressDialog = new ProgressDialog(activity, R.style.MyTheme);
+                        ringProgressDialog.setCancelable(false);
+                        ringProgressDialog.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
+
+                        Drawable myIcon = activity.getResources().getDrawable(R.drawable.progressbar_custom);
+                        ringProgressDialog.setIndeterminateDrawable(myIcon);
+
+                        //  THIS IS IMPORTANT...Keeps the busy spinner from surfacing the hidden navigation buttons.
+                        ringProgressDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+                    }
+
+                    ringProgressDialog.show();
+
+                    mutexC.release();
+
+                }
+            });
+        }
+
+        // One way to wait for the runnable to be done...
+        try {
+            //mutexC.acquire();            // Cannot get mutex until runnable above exits.
+            mutexC.tryAcquire(500, MILLISECONDS);            // Cannot get mutex until runnable above exits.
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+        String ret = "";
+        return ret;
+    }
+
+    public String hideBusyCircle() {
+
+        //if (null == ringProgressDialog) {
+        //    return "";
+        //}
+
+        mutexC = new Semaphore(0);
+
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                if (null != ringProgressDialog) {
+                    //if(ringProgressDialog.isShowing ())
+                    {
+                        Log.i("OpenCPN", "ShowBusyDismiss");
+                        ringProgressDialog.dismiss();
+                    }
+                }
+
+                mutexC.release();
+            }
+        });
+
+        // One way to wait for the runnable to be done...
+        try {
+            //mutexC.acquire();            // Cannot get mutex until runnable above exits.
+            mutexC.tryAcquire(500, MILLISECONDS);            // Cannot get mutex until runnable above exits.
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        String ret = "";
+        return ret;
+    }
+
 
 
 

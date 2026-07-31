@@ -169,20 +169,32 @@ public class MyQtActivity extends QtActivity {
 
     @Override
     protected void onPause() {
+        Log.i("OpenCPN", "onPause()");
         app.onPause();
         super.onPause();
     }
 
     @Override
     protected void onStop() {
+        Log.i("OpenCPN", "onStop()");
         app.onStop();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        app.onDestroy();
-        super.onDestroy();
+        Log.i("OpenCPN", "onDestroy()");
+
+        /*
+         * OpenCPN is a native Qt/wx application. Native state persistence
+         * is completed before Activity.finish() is requested.
+         *
+         * QtActivity.onDestroy() does not reliably return on Android/Qt 5.15,
+         * preventing normal post-destroy cleanup. Explicit process termination
+         * ensures a clean restart and releases all native Qt state.
+         */
+        System.exit(0);
+
     }
 
     @Override

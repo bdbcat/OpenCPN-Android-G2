@@ -131,6 +131,20 @@ public class OCPNConnectivityManager {
         return;
     }
 
+    public void quickStopGpsService() {
+
+        // A short method to allow quick stopping of GPS service
+        // Unbind from the GPS service
+        if (mGPSBound) {
+            activity.getApplicationContext().unbindService(GPSconnection);
+            mGPSBound = false;
+        }
+
+        if (m_GPSServiceStarted)
+            m_GPSServer.doService(GPSServer.GPS_STOPSERVICE);
+
+    }
+
     public String handleGPSServerCommand(final int server_cmd) {
         Log.i("OpenCPN", "queryGPSServer");
 

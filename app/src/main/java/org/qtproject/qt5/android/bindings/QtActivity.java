@@ -45,6 +45,7 @@ import android.content.res.Configuration;
 import android.content.res.Resources.Theme;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -63,6 +64,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import org.opencpn.AppController;
 import org.opencpn.MyQtActivity;
+import org.qtproject.qt5.android.QtActivityDelegate;
 import org.qtproject.qt5.android.QtNative;
 
 public class QtActivity extends Activity
@@ -1263,5 +1265,163 @@ public class QtActivity extends Activity
             return "NOK";
         }
     }
+
+    // -------------------------------------------------------------------
+    // Particular legacy methods needed for o-charts_pi
+    //--------------------------------------------------------------------
+
+    public String GetLegacyServerdCreds() {
+        //TODO Check this on Explorer charts.
+        return "";
+    }
+
+    public String displayHTMLAlertDialog(final String title, final String htmlString) {
+        //Log.i("OpenCPN", "displayHTMLAlertDialog" + htmlString);
+
+        final QtActivityDelegate delegate = QtNative.activityDelegate();
+
+        if (null != delegate) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AppController app = getAppControllerShim();
+                    if (app != null)
+                        app.getHostManager().showHTMLAlertDialog(title, htmlString);
+
+                }
+            });
+        }
+        return "OK";
+    }
+
+    public String launchBrowser(String url) {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        return "OK";
+    }
+
+    public String getUnzipStatus(String dummy) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getDownloadManager().getUnzipStatus(dummy);
+
+        return "";
+    }
+
+    public String validateWriteLocation(final String destination, final String dummy, final int chainCode, final int dummyInt) {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AppController app = getAppControllerShim();
+                if (app != null)
+                    app.getDownloadManager().validateWriteLocation(destination, dummy, chainCode, dummyInt);
+
+            }
+        });
+        return "OK";
+    }
+
+    public void disableRotation() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.DisableRotation();
+    }
+
+    public void EnableRotation() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.EnableRotation();
+    }
+
+    public void hideBusyCircle() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.getHostManager().hideBusyCircle();
+    }
+
+    public void showBusyCircle() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.getHostManager().showBusyCircle();
+    }
+
+    public String getSystemDirs() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getHostManager().getSystemDirs();
+        return "";
+    }
+
+    public String SecureFileCopy(String inFile, String outFile) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getFileController().SecureFileCopy(inFile, outFile);
+        return "";
+    }
+
+    public String createProcSync5stdout(String cmd, String arg1, String arg2, String arg3, String arg4, String arg5) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProcSync5stdout(cmd, arg1, arg2, arg3, arg4, arg5);
+        return "";
+    }
+    public String createProc(String cmd, String arg1, String arg2, String arg3, String arg4, String arg5, String arg6, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProc(cmd, arg1, arg2, arg3, arg4, arg5, arg6, libPath);
+        return "";
+    }
+
+    public String CreateProc(String cmd, String arg1, String arg2, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProc(cmd,
+                    arg1, arg2, libPath);
+        return "";
+    }
+
+    public String createProcSync4(String cmd, String arg1, String arg2, String arg3, String arg4, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProcSync4( cmd,
+                    arg1, arg2, arg3, arg4,libPath);
+
+        return "";
+    }
+
+
+    /*
+        DONE....wxString info_SUPERLEGACY = callActivityMethod_vs("GetLegacyServerdCreds");
+
+        DONE....callActivityMethod_s2s("displayHTMLAlertDialog", _("o-charts_pi Message"), buf.data());
+
+        DONE....callActivityMethod_ss("launchBrowser", _T("http://o-charts.org"));
+
+        DONE....wxString result = callActivityMethod_ss( "getUnzipStatus", _T("") );
+
+        DONE....wxString val_result = callActivityMethod_s2s2i("validateWriteLocation", destination, _T(""), 0, 0);
+
+        DONE....wxString dirs = callActivityMethod_vs("getSystemDirs");
+
+        DONE....wxString result = callActivityMethod_s2s("SecureFileCopy", in, out);
+
+         DONE....QAndroidJniObject data = activity.callObjectMethod("hideBusyCircle", "()Ljava/lang/String;");
+
+         DONE....callActivityMethod_vs("EnableRotation");
+
+          DONE....callActivityMethod_vs("DisableRotation");
+
+        DO....result = callActivityMethod_s6s("createProcSync5stdout", cmd, "-a");
+
+        DO....result = callActivityMethod_s8s("createProc", cmd,
+
+        DO....result = callActivityMethod_s4s("createProc", cmd, "-q", dataDir, libDir);
+
+        DO........result = callActivityMethod_s6s("createProcSync4", cmd, _T("-q"), rootDir, _T("-g"), dataDir, libDir);
+
+
+
+
+     */
 
 }

@@ -98,17 +98,6 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                case "FINISH_APP": {
-                    appController.finishApp();
-
-                    JSONObject result = new JSONObject();
-                    result.put("status", "OK");
-                    result.put("payload", "OK");
-
-                    return result.toString();
-                }
-
-
                 case "GET_SCREEN_ORIENTATION": {
                     String aresult = hostManager.getScreenOrientation();
 
@@ -260,6 +249,8 @@ public class AndroidBridge {
 
  //                public String privateDirChooserDialog(final int seq, final String initialDir, final String Title, final int addFile) {
 
+                // Use afilechooser2 to select a dir from Android sandbox
+                // Commonly used to add chart directories
                 case "PRIVATE_DIR_CHOOSER_ASYNC": {
                     String initialDir = obj.optString("initialDir", "");
                     String title = obj.optString("title", "");
@@ -287,6 +278,8 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                // Use afilechooser2 to select a file from Android sandbox
+                //  Commonly used to add Tide/Current databases
                 case "PRIVATE_FILE_CHOOSER_ASYNC": {
                     String initialDir = obj.optString("initialDir", "");
                     String title = obj.optString("title", "");
@@ -847,6 +840,25 @@ public class AndroidBridge {
             }
         }
     }
+
+    public void dispatchSendCommand(String payload) {
+        Log.i("OpenCPN", "JNI RX: " + payload);
+
+        try {
+            JSONObject obj = new JSONObject(payload);
+            String cmd = obj.getString("cmd");
+
+            switch (cmd) {
+                case "FINISH_APP": {
+                    appController.finishApp();
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            Log.e("OpenCPN", "dispatchSendCommand exception", e);
+        }
+    }
+
 
     public String dispatchCommandLegacy(String command) {
         Log.i("OpenCPN", "JNI CMD: " + command);
