@@ -117,7 +117,7 @@ public class AppController {
         }
 
 /*
-        /// /////////////////////////////////////////////////
+        /// /////////////////////////////////////////////////`
 
         downloadManager.init(this, nativeLib);
 
@@ -387,13 +387,16 @@ public class AppController {
         return true;
     }
 
-    private void handleBackPressedCommon() {
+    public boolean handleBackPressedCommon() {
         if (m_inExit)
-            return;
+            return true;
 
         if (handleOCPNBackButton()) {
             m_inExit = true;
             preClose();
+            return true;
+        } else {
+            return false;
         }
     }
 

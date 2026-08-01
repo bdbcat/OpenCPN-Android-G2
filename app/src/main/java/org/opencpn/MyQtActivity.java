@@ -12,6 +12,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -169,21 +170,21 @@ public class MyQtActivity extends QtActivity {
 
     @Override
     protected void onPause() {
-        Log.i("OpenCPN", "onPause()");
+        Log.i("OpenCPN", "MyQtActivity onPause()");
         app.onPause();
         super.onPause();
     }
 
     @Override
     protected void onStop() {
-        Log.i("OpenCPN", "onStop()");
+        Log.i("OpenCPN", "MyQtActivity onStop()");
         app.onStop();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Log.i("OpenCPN", "onDestroy()");
+        Log.i("OpenCPN", " MyQtActivity onDestroy()");
 
         /*
          * OpenCPN is a native Qt/wx application. Native state persistence
@@ -205,13 +206,25 @@ public class MyQtActivity extends QtActivity {
         root.post(() -> app.setupHybridLayout(root));
     }
 
-    @Override
-    public void onBackPressed() {
-        if (app.handleBack()) return;
 
-        if (Build.VERSION.SDK_INT < 33) {
-            super.onBackPressed();
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+
+        // Android 12 and earlier:
+        // Intercept KEYCODE_BACK before Qt
+        // converts it into a native window close.
+        
+        // Android 13+ uses OnBackInvokedDispatcher instead.
+
+        // Filter an possibly process back button
+        // Back button is always captured here and used for app exit
+        // OpenCPN core does not process back button events
+        if (Build.VERSION.SDK_INT < 33 && keyCode == KeyEvent.KEYCODE_BACK) {
+            app.handleBackPressedCommon();
+            return true;    // no further processing required
         }
+
+        return super.onKeyUp(keyCode, event);
     }
 
     @Override
