@@ -653,13 +653,23 @@ public class AndroidBridge {
 
                 case "DO_COLOR_PICKER": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = ""; //doColorPickerDialog(val);
+                    String jResult = hostManager.doColorPickerDialog(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "COLORPICKER_RESULT_CHECK": {
+                    int val = obj.optInt("parameter", 0);
+                    String jResult = hostManager.isColorPickerDialogFinished();
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+
                     return result.toString();
                 }
 
