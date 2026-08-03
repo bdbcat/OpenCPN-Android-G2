@@ -116,54 +116,7 @@ public class AppController {
                             this::handleBackPressedCommon);
         }
 
-/*
-        /// /////////////////////////////////////////////////`
-
-        downloadManager.init(this, nativeLib);
-
-        // Initialize the JNI bridge
-        AndroidBridge.initialize(hostManager, menuController, connectivity,
-                fileController, connectivityManager, downloadManager, this);
-
-        // --- OpenCPNBridge Init ---
-        OpenCPNBridge.init(this);
-        OpenCPNBridge.getInstance(this).onCreate(getIntent());
-
-        OpenCPNBridge.getInstance(this).initFilesystem();
-
-        // TODO registerNetworkCallback() (API >= 24)
-        // TODO register locale change receiver
-
-        PackageManager packMan = getPackageManager();
-        m_hasGPS = packMan.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
-
-        // --- Preferences ---
-        m_trackContinuous = preferences.applyWindowFlags(this);
-
-        // --- Permissions ---
-        checkPermissions();
-
-        // TODO setupEdgeToEdge()
-        // TODO setup ActionBar (icon, logo, etc.)
-        // TODO lockActivityOrientation(this)
-
-        // TODO Device ID / UUID logic (Android < 29 vs >= 29)
-        // TODO m_systemName generation
-
-        // --- USB ---
-        usb.initIfAvailable(this);
-
-        // TODO Establish GUI layout if needed (setContentView etc.)
-
-        // TODO ENVIRONMENT_VARIABLES setup (QT_ANDROID_THEME, DPI, etc.)
-        // TODO exportMap initialization (if still required)
-
-
-        invalidateOptionsMenu();
-
-        /// //////////////////////////////////////////////////
-
- */
+        hostManager.Init();
         hostManager.relocateOCPNPlugins();
 
     }

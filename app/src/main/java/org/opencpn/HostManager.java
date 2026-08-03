@@ -19,6 +19,7 @@ import android.content.res.Configuration;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
+import android.media.MediaDrm;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -26,6 +27,7 @@ import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -53,6 +55,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -64,7 +67,10 @@ import java.time.format.FormatStyle;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.UUID;
 import java.util.concurrent.Semaphore;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HostManager {
 
@@ -107,12 +113,167 @@ public class HostManager {
 
     private String m_ColorDialogString;
     private Boolean m_ColorDialogDone = false;;
+    private static String m_UUID = null;
+    private static String m_OCPNUUID = null;
+    private static String m_OCPNWVID = null;
+    private static String m_selID = null;
+    private String m_systemName;
+    private static String OCPNuniqueID = null;
+    private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
 
     public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
         this.connectivityManager = cm;
+    }
+
+
+    public void Init() {
+
+    //  Initialize Device ID / UUID logic
+        m_UUID = getUUID(activity);
+        m_OCPNUUID = getOCPNuniqueID();
+        m_OCPNWVID = getOCPNWVID();
+
+        // Decide which "id" value to use
+        if ((m_UUID != null) && (m_UUID.length() > 0) && (Build.VERSION.SDK_INT < 29))   // Strictly less than Android 10
+            m_selID = m_UUID;
+        else if (m_OCPNWVID != null)
+            m_selID = m_OCPNWVID;
+        else
+            m_selID = m_OCPNUUID;
+
+        m_systemName = getSystemName(m_selID);
+        Log.i("OpenCPN", "msn " + m_systemName);
+
+
+
+/*
+        /// /////////////////////////////////////////////////`
+
+        downloadManager.init(this, nativeLib);
+
+        // Initialize the JNI bridge
+        AndroidBridge.initialize(hostManager, menuController, connectivity,
+                fileController, connectivityManager, downloadManager, this);
+
+        // --- OpenCPNBridge Init ---
+        OpenCPNBridge.init(this);
+        OpenCPNBridge.getInstance(this).onCreate(getIntent());
+
+        OpenCPNBridge.getInstance(this).initFilesystem();
+
+        // TODO registerNetworkCallback() (API >= 24)
+        // TODO register locale change receiver
+
+        PackageManager packMan = getPackageManager();
+        m_hasGPS = packMan.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS);
+
+        // --- Preferences ---
+        m_trackContinuous = preferences.applyWindowFlags(this);
+
+        // --- Permissions ---
+        checkPermissions();
+
+        // TODO setupEdgeToEdge()
+        // TODO setup ActionBar (icon, logo, etc.)
+        // TODO lockActivityOrientation(this)
+
+        // TODO m_systemName generation
+
+        // --- USB ---
+        usb.initIfAvailable(this);
+
+        // TODO Establish GUI layout if needed (setContentView etc.)
+
+        // TODO ENVIRONMENT_VARIABLES setup (QT_ANDROID_THEME, DPI, etc.)
+        // TODO exportMap initialization (if still required)
+
+
+        invalidateOptionsMenu();
+
+        /// //////////////////////////////////////////////////
+
+ */
+    }
+
+
+    private String getUUID(Context context) {
+        final String androidId = Settings.Secure.getString(
+                context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        if (androidId.isEmpty())
+            return "";
+
+        final UUID uuid;
+        try {
+            uuid = UUID.nameUUIDFromBytes(androidId.getBytes("utf8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+
+        return uuid.toString();
+    }
+
+    private String getSystemName(String sID) {
+        String name = android.os.Build.DEVICE;
+        if (name.length() > 11)
+            name = name.substring(0, 10);
+
+        // Get a hash of the supplied string
+        int uuidHash = -(sID.hashCode());
+        // And take the mod(10000) result
+        int val = Math.abs(uuidHash) % 10000;
+        name += String.valueOf(val);
+
+        Pattern replace = Pattern.compile("[-_/()~#%&*{}:;?|<>!$^+=@ ]");
+        Matcher matcher2 = replace.matcher(name);
+        name = matcher2.replaceAll("0");
+
+        name = name.toLowerCase(Locale.ROOT);
+        return name;
+
+    }
+
+    public String getOCPNuniqueID() {
+        if (OCPNuniqueID == null) {
+            SharedPreferences sharedPrefs = activity.getSharedPreferences(PREF_UNIQUE_ID, Context.MODE_PRIVATE);
+            OCPNuniqueID = sharedPrefs.getString(PREF_UNIQUE_ID, null);
+            if (OCPNuniqueID == null) {
+                OCPNuniqueID = UUID.randomUUID().toString();
+                SharedPreferences.Editor editor = sharedPrefs.edit();
+                editor.putString(PREF_UNIQUE_ID, OCPNuniqueID);
+                editor.commit();
+            }
+        }
+        return OCPNuniqueID;
+    }
+
+
+    public String getOCPNWVID() {
+        String rv = "";
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+
+            MediaDrm mediaDrm;
+
+            final UUID WIDEVINE_UUID = UUID.fromString("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed");
+            try {
+                mediaDrm = new MediaDrm(WIDEVINE_UUID);
+            } catch (Exception e) {
+                return rv;
+            }
+
+            byte[] deviceUniqueIdArray = mediaDrm.getPropertyByteArray("deviceUniqueId");
+            StringBuilder sb = new StringBuilder();
+            for (byte b : deviceUniqueIdArray) {
+                sb.append(String.format("%02X", b));
+            }
+            //System.out.println(sb.toString());
+            //String encodedWidevineId = Base64.encodeToString(deviceUniqueIdArray, DEFAULT).trim();
+            return sb.toString();
+        } else
+            return rv;
     }
 
 
@@ -326,12 +487,12 @@ public class HostManager {
         s += "\n Device: " + Build.DEVICE;
         s += "\n Model (and Product): " + Build.MODEL + " (" + Build.PRODUCT + ")";
         // TODO
-        s += "\n" + "XXX"; //getPackageName();
-        s += "\n UUID:" + "XXX"; //getUUID(this);
-        s += "\n systemName:" + "XXX"; //m_systemName;
-        s += "\n OCPNRUID:" + "XXX"; //getOCPNuniqueID();
-        s += "\n OCPNWVID:" + "XXX"; //getOCPNWVID();
-        s += "\n SELID:" + "XXX"; //m_selID;
+        s += "\n" + activity.getPackageName();
+        s += "\n UUID:" + getUUID(activity);
+        s += "\n systemName:" + m_systemName;
+        s += "\n OCPNRUID:" + getOCPNuniqueID();
+        s += "\n OCPNWVID:" + getOCPNWVID();
+        s += "\n SELID:" + m_selID;
         s += "\n VERSION_CODE:" + String.valueOf(BuildConfig.VERSION_CODE);
         Log.i("OpenCPN", s);
 
