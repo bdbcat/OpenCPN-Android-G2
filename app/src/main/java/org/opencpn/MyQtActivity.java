@@ -213,7 +213,7 @@ public class MyQtActivity extends QtActivity {
         // Android 12 and earlier:
         // Intercept KEYCODE_BACK before Qt
         // converts it into a native window close.
-        
+
         // Android 13+ uses OnBackInvokedDispatcher instead.
 
         // Filter an possibly process back button

@@ -225,9 +225,7 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
     }
     public String cancelDownload(final int ID) {
         Log.i("OpenCPN", "cancelDownload " + String.valueOf(ID));
-        //if (m_dm != null) {
-        //    remove(ID);
-        //}
+        DownloadService.requestCancel();
 
         return "OK";
     }

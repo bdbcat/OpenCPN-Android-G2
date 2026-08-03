@@ -623,7 +623,6 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 
@@ -804,8 +803,17 @@ public class AndroidBridge {
                     String url = obj.optString("url", "");
                     String parms = obj.optString("parms", "");
                     String stimeout = obj.optString("stimeout", "");
-                    //Todo  Fix me, test
-                    String jResult = "OK"; //connectivityManager.doHttpPostAsync(url, parms, stimeout);
+                    
+                    String jResult = connectivityManager.doHttpPostAsync(url, parms, stimeout);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "HTTP_POST_ASYNC_RESULT_CHECK" : {
+                    String jResult = connectivityManager.checkPostAsync();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
