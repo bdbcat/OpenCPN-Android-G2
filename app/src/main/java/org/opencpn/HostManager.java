@@ -8,9 +8,11 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -57,6 +59,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.time.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,9 +67,11 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
@@ -120,6 +125,7 @@ public class HostManager {
     private String m_systemName;
     private static String OCPNuniqueID = null;
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
+    private BroadcastReceiver mLocaleChangeReceiver;
 
     public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
@@ -148,6 +154,26 @@ public class HostManager {
         Log.i("OpenCPN", "msn " + m_systemName);
 
 
+        // Locale change notification
+        // BroadcastReceiver which receives broadcast Intent for local changes
+        mLocaleChangeReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.i("OpenCPN", "mLocaleChangeReceiver");
+
+                final String action = intent.getAction();
+                Log.i("OpenCPN", "onLocaleChange: " + action);
+                String language = getCurrentAndroidLocale().getLanguage();
+                Log.i("OpenCPN", "  new language is: " + language);
+
+                setAppLocale(getCurrentAndroidLocale());
+            }
+        };
+
+        // Register my desire to get locale change notifications
+        IntentFilter filter = new IntentFilter(Intent.ACTION_LOCALE_CHANGED);
+        activity.registerReceiver(mLocaleChangeReceiver, filter);
 
 /*
         /// /////////////////////////////////////////////////`
@@ -276,6 +302,33 @@ public class HostManager {
             return rv;
     }
 
+    //  locale functions
+    public Locale getCurrentAndroidLocale() {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+//            return getResources().getConfiguration().getLocales().get(0);
+//        }
+//        else
+        {
+            //noinspection deprecation
+            return activity.getResources().getConfiguration().locale;
+        }
+    }
+
+    public void setAppLocale(Locale newLocale) {
+        String lang = newLocale.getLanguage();
+        String country = newLocale.getCountry();
+
+        String toSet = lang;
+        if (!country.isEmpty())
+            toSet += "_" + country;
+
+        Log.i("OpenCPN", "  setAppLocale new language ID is: " + toSet);
+        //TODO  Implement this
+        // nativeLib.invokeCmdEventCmdString( ID_CMD_SET_LOCALE, toSet);
+
+    }
+
+
 
     // --------------------------------------------------------------------
     // Activity result entry point
@@ -342,6 +395,8 @@ public class HostManager {
             return true;
         }
         if (requestCode == OCPN_GOOGLEMAPS_REQUEST_CODE) {
+            // TODO.  Create new module for Google Maps GoogleMapsManager.
+            // TODO New manager initialized from App Controller.
             // Make sure the request was successful
             if (resultCode == Activity.RESULT_OK) {
                 String finalPosition = data.getStringExtra("finalPosition");
@@ -868,6 +923,16 @@ public class HostManager {
         return rv;
     }
 
+    public String getAndroidTZOffsetMinutes() {
+        TimeZone timeZone = TimeZone.getDefault();
+        long currentTimeMillis = Calendar.getInstance().getTimeInMillis();
+        int offsetInMillis = timeZone.getOffset(currentTimeMillis);
+        int offsetInMinutes = offsetInMillis / 1000 / 60;
+        String rv = Integer.toString(offsetInMillis);
+        Log.i("OpenCPN", "   offsetInMinutes: " + rv);
+        return rv;
+    }
+
     public String doGRIBActivity(String json) {
         Log.i("OpenCPN", "doGRIBActivity");
 //        Log.i("DEBUGGER_TAG", json);
@@ -1282,6 +1347,13 @@ public class HostManager {
 
         return "56";
     }
+
+
+    /*
+    ========================================================================
+        // Some general UI support items and dialogs
+    =======================================================================
+    */
 
     public String showHTMLAlertDialog(String title, String htmlString) {
 

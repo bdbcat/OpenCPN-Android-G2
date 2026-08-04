@@ -411,11 +411,12 @@ public class AndroidBridge {
                 }
 
                 case "GET_TZ_OFFSET": {
-                    JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
+                    int seq = obj.optInt("seq", -1);
+                    String jResult =  hostManager.getAndroidTZOffsetMinutes();
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
                     return result.toString();
                 }
 
