@@ -58,7 +58,7 @@ public class AppController {
         connectivity = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
-        hostEnvironmaent = new HostEnvironment(activity, OCPNNativeLib.getInstance(),  connectivityManager);
+        hostEnvironmaent = new HostEnvironment(activity, OCPNNativeLib.getInstance(),  connectivityManager, nativeBridge);
 
         usb = new UsbController();
 

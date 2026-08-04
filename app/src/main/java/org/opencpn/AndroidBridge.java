@@ -830,7 +830,34 @@ public class AndroidBridge {
                     result.put("payload", jResult);
                     return result.toString();
                 }
-//
+
+                case "DO_SIMPLE_YESNO_DIALOG" : {
+                    int seq = obj.optInt("seq", -1);
+                    String title = obj.optString("title", "");
+                    String message = obj.optString("message", "");
+
+                    hostEnvironment.showSimpleYesNoDialog(seq, title, message);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", "OK");
+                    return result.toString();
+                }
+
+                case "DO_SIMPLE_OK_DIALOG" : {
+                    int seq = obj.optInt("seq", -1);
+                    String title = obj.optString("title", "");
+                    String message = obj.optString("message", "");
+
+                    hostEnvironment.showSimpleOKDialog(seq, title, message);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", "OK");
+                    return result.toString();
+                }
+
+
             default: {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");

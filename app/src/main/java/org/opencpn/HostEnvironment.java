@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
@@ -68,6 +69,7 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +87,7 @@ public class HostEnvironment {
     private final String m_filesDir;
     private final OCPNNativeLib nativeLib;
     private final OCPNConnectivityManager connectivityManager;
+    private final NativeBridgeManager nb;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
@@ -121,11 +124,12 @@ public class HostEnvironment {
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
     private BroadcastReceiver mLocaleChangeReceiver;
 
-    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
+    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
         this.connectivityManager = cm;
+        this.nb = nb;
     }
 
 
@@ -1542,7 +1546,119 @@ public class HostEnvironment {
         }
     }
 
+    public void showSimpleOKDialog(int seq, final String title, final String message) {
+        int timeoutSeconds = 30;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final AtomicBoolean completed = new AtomicBoolean(false);
 
+                AlertDialog.Builder alertDialogBuilder =
+                        new AlertDialog.Builder(activity);
+
+                alertDialogBuilder
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setCancelable(false)
+                        .setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        nb.postJsonEvent(
+                                                JSONHelpers.makeEvent(seq,
+                                                        "simpleOKDialogResponse",
+                                                        "response", "OK",
+                                                        "action", "response"));
+
+                                    }
+                                });
+
+                AlertDialog dialog = alertDialogBuilder.create();
+                dialog.show();
+
+                if (timeoutSeconds > 0) {
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+                        if (completed.compareAndSet(false, true)) {
+
+                            if (dialog.isShowing())
+                                dialog.dismiss();
+                            nb.postJsonEvent(
+                                    JSONHelpers.makeEvent(seq,
+                                            "simpleOKDialogResponse",
+                                            "response", "OK",
+                                            "action", "response"));
+                        }
+
+                    }, timeoutSeconds * 1000L);
+                }
+            }
+        });
+    }
+
+    public void showSimpleYesNoDialog(int seq, final String title, final String message) {
+        int timeoutSeconds = 30;
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final AtomicBoolean completed = new AtomicBoolean(false);
+
+                AlertDialog.Builder alertDialogBuilder =
+                        new AlertDialog.Builder(activity);
+
+                alertDialogBuilder
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setCancelable(false)
+                        .setPositiveButton("Yes",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                        nb.postJsonEvent(
+                                                JSONHelpers.makeEvent(seq,
+                                                        "simpleYesNoDialogResponse",
+                                                        "response", "Yes",
+                                                        "action", "response"));
+
+                                    }})
+                        .setNegativeButton("No",
+                                 new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                            nb.postJsonEvent(
+                                                    JSONHelpers.makeEvent(seq,
+                                                            "simpleYesNoDialogResponse",
+                                                            "response", "No",
+                                                            "action", "response"));
+
+
+                                        }});
+
+                AlertDialog dialog = alertDialogBuilder.create();
+                dialog.show();
+
+                if (timeoutSeconds > 0) {
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+
+                        if (completed.compareAndSet(false, true)) {
+
+                            if (dialog.isShowing())
+                                dialog.dismiss();
+                            nb.postJsonEvent(
+                                    JSONHelpers.makeEvent(seq,
+                                            "simpleOKDialogResponse",
+                                            "response", "OK",
+                                            "action", "response"));
+                        }
+
+                    }, timeoutSeconds * 1000L);
+                }
+            }
+        });
+    }
 
 
 }
