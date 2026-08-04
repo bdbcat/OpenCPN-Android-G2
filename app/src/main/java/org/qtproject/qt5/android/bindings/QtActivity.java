@@ -1180,7 +1180,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostManager.getDeviceInfo();
+            return app.hostEnvironmaent.getDeviceInfo();
         } catch(Throwable t) {
             Log.e("LegacyJNI", "getDeviceInfo failed", t);
             return "NOK";
@@ -1195,7 +1195,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostManager.getDisplayMetrics();
+            return app.hostEnvironmaent.getDisplayMetrics();
         } catch(Throwable t) {
             Log.e("LegacyJNI", "getDisplayMetrics failed", t);
             return "NOK";
@@ -1243,7 +1243,7 @@ public class QtActivity extends Activity
                Log.e("LegacyJNI", "AppController null");
                return "NOK";
            }
-           return app.hostManager.getLocalizedDateTime(format, epoch_seconds);
+           return app.hostEnvironmaent.getLocalizedDateTime(format, epoch_seconds);
           } catch(Throwable t) {
            Log.e("LegacyJNI", "getLocalizedDateTime failed", t);
            return "NOK";
@@ -1259,7 +1259,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostManager.doGRIBActivity(json) ;
+            return app.hostEnvironmaent.doGRIBActivity(json) ;
         } catch(Throwable t) {
             Log.e("LegacyJNI", "doGRIBActivity failed", t);
             return "NOK";
@@ -1286,7 +1286,7 @@ public class QtActivity extends Activity
                 public void run() {
                     AppController app = getAppControllerShim();
                     if (app != null)
-                        app.getHostManager().showHTMLAlertDialog(title, htmlString);
+                        app.getHostEnvironment().showHTMLAlertDialog(title, htmlString);
 
                 }
             });
@@ -1336,19 +1336,19 @@ public class QtActivity extends Activity
     public void hideBusyCircle() {
         AppController app = getAppControllerShim();
         if (app != null)
-            app.getHostManager().hideBusyCircle();
+            app.getHostEnvironment().hideBusyCircle();
     }
 
     public void showBusyCircle() {
         AppController app = getAppControllerShim();
         if (app != null)
-            app.getHostManager().showBusyCircle();
+            app.getHostEnvironment().showBusyCircle();
     }
 
     public String getSystemDirs() {
         AppController app = getAppControllerShim();
         if (app != null)
-            return app.getHostManager().getSystemDirs();
+            return app.getHostEnvironment().getSystemDirs();
         return "";
     }
 

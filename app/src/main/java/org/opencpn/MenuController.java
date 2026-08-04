@@ -258,7 +258,7 @@ public class MenuController {
                 return true;
 
             case R.id.ocpn_action_googlemaps:
-                app.getHostManager().invokeGoogleMaps();
+                app.getHostEnvironment().invokeGoogleMaps();
                 return true;
 
             case R.id.ocpn_action_filemanager:
@@ -269,7 +269,7 @@ public class MenuController {
                 return true;
 
             case R.id.ocpn_action_toggle_fullscreen:
-                app.getHostManager().toggleFullscreen();
+                app.getHostEnvironment().toggleFullscreen();
                 return true;
 
             case R.id.ocpn_action_settings_basic:

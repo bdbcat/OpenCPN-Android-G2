@@ -3,12 +3,11 @@ package org.opencpn;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.json.JSONObject;
 
 public class AndroidBridge {
-    private HostManager hostManager;
+    private HostEnvironment hostEnvironment;
     private ToolbarController toolbarController;
     private ConnectivityHelper connectivityHelper;
     private FileController fileController;
@@ -25,7 +24,7 @@ public class AndroidBridge {
     }
 
     public void initialize(
-            HostManager hm,
+            HostEnvironment hm,
             MenuController mc,
             ConnectivityHelper ch,
             FileController fc,
@@ -34,7 +33,7 @@ public class AndroidBridge {
             AppController ac,
             NativeBridgeManager nb )
     {
-        hostManager = hm;
+        hostEnvironment = hm;
         menuController = mc;
         connectivityHelper = ch;
         fileController = fc;
@@ -67,7 +66,7 @@ public class AndroidBridge {
 
                 case "GET_DEVICE_INFO": {
 
-                    String aresult = hostManager.getDeviceInfo();
+                    String aresult = hostEnvironment.getDeviceInfo();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -77,7 +76,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_SYSTEM_DIRS": {
-                    String aresult = hostManager.getSystemDirs();
+                    String aresult = hostEnvironment.getSystemDirs();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -99,7 +98,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_SCREEN_ORIENTATION": {
-                    String aresult = hostManager.getScreenOrientation();
+                    String aresult = hostEnvironment.getScreenOrientation();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -109,7 +108,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_DISPLAY_METRICS": {
-                    String aresult = hostManager.getDisplayMetrics();
+                    String aresult = hostEnvironment.getDisplayMetrics();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -119,7 +118,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_LOCALE_STRING": {
-                    String aresult = hostManager.getAndroidLocaleString();
+                    String aresult = hostEnvironment.getAndroidLocaleString();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -129,7 +128,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_VERSION_CODE": {
-                    String aresult = hostManager.getAndroidVersionCode();
+                    String aresult = hostEnvironment.getAndroidVersionCode();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -139,7 +138,7 @@ public class AndroidBridge {
                 }
 
                 case "GET_VERSION_NAME": {
-                    String aresult = hostManager.getAndroidVersionName();
+                    String aresult = hostEnvironment.getAndroidVersionName();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -169,7 +168,7 @@ public class AndroidBridge {
                 }
 
                 case "DISABLE_ROTATION": {
-                    hostManager.lockActivityOrientation(activity);
+                    hostEnvironment.lockActivityOrientation(activity);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -364,7 +363,7 @@ public class AndroidBridge {
                     String fileName = obj.optString("filename", "");
                     String sound = obj.optString("sound", "");
 
-                    String jResult =  hostManager.playSound(fileName, sound);
+                    String jResult =  hostEnvironment.playSound(fileName, sound);
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
@@ -412,7 +411,7 @@ public class AndroidBridge {
 
                 case "GET_TZ_OFFSET": {
                     int seq = obj.optInt("seq", -1);
-                    String jResult =  hostManager.getAndroidTZOffsetMinutes();
+                    String jResult =  hostEnvironment.getAndroidTZOffsetMinutes();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -486,7 +485,7 @@ public class AndroidBridge {
 
                 case "SET_TRACK_CONTINUOUS": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.setTrackContinuous(val);
+                    String jResult = hostEnvironment.setTrackContinuous(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -497,7 +496,7 @@ public class AndroidBridge {
 
                 case "SET_FULL_SCREEN": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.setFullscreen(val);
+                    String jResult = hostEnvironment.setFullscreen(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -532,7 +531,7 @@ public class AndroidBridge {
 
                 case "LAST_CALL_INIT": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.lastCallOnInit(val);
+                    String jResult = hostEnvironment.lastCallOnInit(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -654,7 +653,7 @@ public class AndroidBridge {
 
                 case "DO_COLOR_PICKER": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.doColorPickerDialog(val);
+                    String jResult = hostEnvironment.doColorPickerDialog(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -665,7 +664,7 @@ public class AndroidBridge {
 
                 case "COLORPICKER_RESULT_CHECK": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = hostManager.isColorPickerDialogFinished();
+                    String jResult = hostEnvironment.isColorPickerDialogFinished();
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -676,7 +675,7 @@ public class AndroidBridge {
 
                 case "LAUNCH_WEB_VIEW": {
                     String val = obj.optString("sparameter", "");
-                    String jResult = hostManager.launchWebView(val);
+                    String jResult = hostEnvironment.launchWebView(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -686,7 +685,7 @@ public class AndroidBridge {
 
                 case "SHOW_TOAST": {
                     String val = obj.optString("sparameter", "");
-                    String jResult = hostManager.showToast(val);
+                    String jResult = hostEnvironment.showToast(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -803,7 +802,7 @@ public class AndroidBridge {
 
             case "DO_ANDROID_SETTINGS": {
                     String initial_settings = obj.optString("initial_settings", "");
-                    String jResult = hostManager.doAndroidSettings(initial_settings);
+                    String jResult = hostEnvironment.doAndroidSettings(initial_settings);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
@@ -889,7 +888,7 @@ public class AndroidBridge {
                     return "PONG";
 
                 case "GET_DEVICE_INFO":
-                    return hostManager.getDeviceInfo();
+                    return hostEnvironment.getDeviceInfo();
 
                 //case "SHOW_MENU":
                 //    return ToolbarController.showMenu();

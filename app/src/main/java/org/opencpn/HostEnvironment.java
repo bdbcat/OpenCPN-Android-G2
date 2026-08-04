@@ -1,12 +1,9 @@
 package org.opencpn;
 
 
-import static org.opencpn.UIThreadHelper.runOnUiThread;
-
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -42,8 +39,6 @@ import android.view.Surface;
 import android.content.pm.ActivityInfo;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.opencpn.opencpn.BuildConfig;
@@ -59,7 +54,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.time.*;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -77,7 +71,7 @@ import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class HostManager {
+public class HostEnvironment {
 
     private static final int OCPN_GRIB_REQUEST_CODE = 6000;
     private final static int OCPN_SETTINGS_REQUEST_CODE = 6002;
@@ -127,7 +121,7 @@ public class HostManager {
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
     private BroadcastReceiver mLocaleChangeReceiver;
 
-    public HostManager(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
+    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;

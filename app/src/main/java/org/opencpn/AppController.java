@@ -28,7 +28,7 @@ public class AppController {
     private ConnectivityHelper connectivity;
     private OCPNConnectivityManager connectivityManager;
     private UsbController usb;
-    public HostManager hostManager;
+    public HostEnvironment hostEnvironmaent;
     private MenuController menuController;
     private ToolbarController toolbarController;
     private FileController fileController;
@@ -58,7 +58,7 @@ public class AppController {
         connectivity = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
-        hostManager = new HostManager(activity, OCPNNativeLib.getInstance(),  connectivityManager);
+        hostEnvironmaent = new HostEnvironment(activity, OCPNNativeLib.getInstance(),  connectivityManager);
 
         usb = new UsbController();
 
@@ -79,7 +79,7 @@ public class AppController {
 
         // Initialize bridge once
         androidBridge.initialize(
-                hostManager,
+                hostEnvironmaent,
                 menuController,
                 connectivity,
                 fileController,
@@ -116,8 +116,8 @@ public class AppController {
                             this::handleBackPressedCommon);
         }
 
-        hostManager.Init();
-        hostManager.relocateOCPNPlugins();
+        hostEnvironmaent.Init();
+        hostEnvironmaent.relocateOCPNPlugins();
 
     }
 
@@ -129,8 +129,8 @@ public class AppController {
         return m_toolbarOverlay;
     }
 
-    public HostManager getHostManager() {
-        return hostManager;
+    public HostEnvironment getHostEnvironment() {
+        return hostEnvironmaent;
     }
 
     public FileController getFileController() {
@@ -260,7 +260,7 @@ public class AppController {
                     requestCode, resultCode, data);
         }
         if ((requestCode >= 6000) && (requestCode < 7000)) {
-            hostManager.onActivityResult(
+            hostEnvironmaent.onActivityResult(
                     requestCode, resultCode, data);
         }
         if ((requestCode >= 7000) && (requestCode < 8000)) {
