@@ -20,6 +20,7 @@ import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaDrm;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -63,6 +64,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -1658,6 +1660,50 @@ public class HostEnvironment {
                 }
             }
         });
+    }
+
+    public String isHelpAvailable() {
+        boolean bVal = false;
+        List<PackageInfo> packList = activity.getPackageManager().getInstalledPackages(0);
+        for (int i = 0; i < packList.size(); i++) {
+            PackageInfo packInfo = packList.get(i);
+            if ((packInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0) {
+                String appName = packInfo.applicationInfo.loadLabel(activity.getPackageManager()).toString();
+                if (appName.equals("OpenCPN User Manual")) {
+                    //if(packInfo.versionCode >= 18){
+                    bVal = true;
+                    break;
+                    //}
+                }
+                //Log.i("OpenCPN", appName);
+            }
+        }
+        if (bVal)
+            return "YES";
+        else
+            return "NO";
+    }
+    public String installPlaystoreHelp() {
+
+        final String helpPackageName = "org.opencpn.opencpnusermanual";
+        try {
+            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + helpPackageName)));
+        } catch (android.content.ActivityNotFoundException anfe) {
+            activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + helpPackageName)));
+        }
+        return "OK";
+    }
+
+    public String launchHelpBook() {
+        Log.i("OpenCPN", "launchHelpBook");
+        if (isHelpAvailable().equals("YES")) {
+            Log.i("OpenCPN", "Help is available");
+            Intent launchIntent = activity.getPackageManager().getLaunchIntentForPackage("org.opencpn.opencpnusermanual");
+            activity.startActivity(launchIntent);
+
+            return "OK";
+        } else
+            return "NO";
     }
 
 

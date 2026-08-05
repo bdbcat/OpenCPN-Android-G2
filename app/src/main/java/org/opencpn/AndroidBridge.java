@@ -381,22 +381,28 @@ public class AndroidBridge {
                 }
 
                 case "IS_HELP_AVAIL": {
+                    String jResult =  hostEnvironment.isHelpAvailable();
                     JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
+                    result.put("status", "OK");
+                    result.put("message", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    return result.toString();
+                }
+
+                case "INSTALL_PLAYSTORE_HELP": {
+                    String jResult =  hostEnvironment.installPlaystoreHelp();;
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
                     return result.toString();
                 }
 
                 case "LAUNCH_HELPBOOK": {
-                    //fileController.exportFile("myfile");
+                    String jResult =  hostEnvironment.launchHelpBook();;
 
                     JSONObject result = new JSONObject();
-                    result.put("status", "ERROR");
-                    result.put("message", "UNKNOWN_COMMAND");
-
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
+                    result.put("status", "OK");
+                    result.put("message", jResult);
                     return result.toString();
                 }
 
