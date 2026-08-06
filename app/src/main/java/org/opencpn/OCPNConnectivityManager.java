@@ -7,6 +7,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -37,7 +41,7 @@ public class OCPNConnectivityManager {
     private Activity activity;
     private GPSServer m_GPSServer;
     public ServiceConnection GPSconnection;
-
+    public ConnectivityManager connectivityManager;
     private boolean m_GPSServiceStarted;
     private boolean mGPSBound;
     private boolean m_gpsServerActionPending;
@@ -68,11 +72,15 @@ public class OCPNConnectivityManager {
 
     public void init(Activity activity) {
         this.activity = activity;
+
+        connectivityManager = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+        registerNetworkCallback();
+
         wifi = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         m_GPSServer = new GPSServer();
 
-         GPSconnection = new ServiceConnection() {
+        GPSconnection = new ServiceConnection() {
 
 
             public void onServiceConnected(ComponentName className,
@@ -111,6 +119,36 @@ public class OCPNConnectivityManager {
             // permission denied, boo! Disable the
             // functionality that depends on this permission.
             Log.i("OpenCPN", "GPS permission denied in onRequestPermissionsResult");
+        }
+    }
+
+
+    public void registerNetworkCallback() {
+        if (connectivityManager == null)
+            return;
+        try {
+
+            connectivityManager.registerDefaultNetworkCallback(new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(Network network) {
+                    enableMulticast();
+                    Log.e("OpenCPN", "The default network is now: " + network);
+                }
+                @Override
+                public void onLost(Network network) {
+                    Log.e("OpenCPN", "The application no longer has a default network. The last default network was " + network);
+                }
+                @Override
+                public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities) {
+                    //Log.e("OpenCPN", "The default network changed capabilities: " + networkCapabilities);
+                }
+                @Override
+                public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
+                    //Log.e("OpenCPN", "The default network changed link properties: " + linkProperties);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

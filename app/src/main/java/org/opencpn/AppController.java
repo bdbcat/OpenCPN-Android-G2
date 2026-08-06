@@ -25,7 +25,7 @@ public class AppController {
     // Core subsystems
     private NativeBridgeManager nativeBridge;
     private PreferencesManager preferences;
-    private ConnectivityHelper connectivity;
+    private ConnectivityHelper connectivityHelper;
     private OCPNConnectivityManager connectivityManager;
     private UsbController usb;
     public HostEnvironment hostEnvironmaent;
@@ -55,7 +55,7 @@ public class AppController {
         nativeBridge = new NativeBridgeManager();
 
         preferences = new PreferencesManager(activity);
-        connectivity = new ConnectivityHelper(activity);
+        connectivityHelper = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
         hostEnvironmaent = new HostEnvironment(activity, OCPNNativeLib.getInstance(),  connectivityManager, nativeBridge);
@@ -81,7 +81,7 @@ public class AppController {
         androidBridge.initialize(
                 hostEnvironmaent,
                 menuController,
-                connectivity,
+                connectivityHelper,
                 fileController,
                 connectivityManager,
                 downloadManager,
@@ -95,7 +95,7 @@ public class AppController {
 
         // --- Android Location services ---
         connectivityManager.init(activity);
-        connectivity.init();
+        connectivityHelper.init();
 
         downloadManager.init(activity, nativeLib);
 
@@ -168,7 +168,7 @@ public class AppController {
     }
 
     public void onDestroy() {
-        connectivity.cleanup();
+        connectivityHelper.cleanup();
     }
 
     // ---------------------------------------------------

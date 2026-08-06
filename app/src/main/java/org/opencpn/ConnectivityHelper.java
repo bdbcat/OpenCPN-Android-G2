@@ -25,14 +25,6 @@ public class ConnectivityHelper {
     public void init() {
         wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            connectivityManager =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-            // TODO registerNetworkCallback()
-
-
-        }
 
         // TODO acquire multicast lock if needed
 
