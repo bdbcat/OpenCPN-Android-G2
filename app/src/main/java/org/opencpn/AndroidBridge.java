@@ -425,7 +425,19 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-               case "IS_NET_AVAIL": {
+                case "GET_LOCALIZED_DATE_TIME": {
+                    String format = obj.optString("format", "");
+                    int epoch = obj.optInt("epoch");
+
+                    String jResult =  hostEnvironment.getLocalizedDateTime(format, epoch);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "IS_NET_AVAIL": {
                     JSONObject result = new JSONObject();
                     result.put("status", "ERROR");
                     result.put("message", "UNKNOWN_COMMAND");
