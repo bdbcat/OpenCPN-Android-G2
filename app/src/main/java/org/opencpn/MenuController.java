@@ -300,48 +300,55 @@ public class MenuController {
     }
 
     void applyButtonState() {
-        switch (menuState.followState) {
-            case 0:
-                followButton.setImageResource(R.drawable.follow);
-                break;
-            case 1:
-                followButton.setImageResource(R.drawable.follow_active_green);
-        }
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (menuState.followState) {
+                    case 0:
+                        followButton.setImageResource(R.drawable.follow);
+                        break;
+                    case 1:
+                        followButton.setImageResource(R.drawable.follow_active_green);
+                        break;
+                }
 
-        if (menuState.trackActive) { trackButton.setImageResource(R.drawable.trackon); }
-        else { trackButton.setImageResource(R.drawable.trackoff); }
+                if (menuState.trackActive) { trackButton.setImageResource(R.drawable.trackon); }
+                else { trackButton.setImageResource(R.drawable.trackoff); }
+                // Route Button not visible
+                setToolbarButtonVisible(R.id.btn_route, false);
 
-
-        // Route Button not visible
-        setToolbarButtonVisible(R.id.btn_route, false);
-
+            }
+        });
     }
 
     public void applyMenuState(Menu menu) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                // Route item
+                itemRouteCreate = menu.findItem(R.id.ocpn_action_createroute);
+                if (null != itemRouteCreate) {
+                    itemRouteCreate.setVisible(!menuState.routeActiveState);
+                }
+                itemRouteCreateActive = menu.findItem(R.id.ocpn_route_create_active);
+                if (null != itemRouteCreateActive) {
+                    itemRouteCreateActive.setVisible(menuState.routeActiveState);
+                }
 
-        // Route item
-        itemRouteCreate = menu.findItem(R.id.ocpn_action_createroute);
-        if (null != itemRouteCreate) {
-            itemRouteCreate.setVisible(!menuState.routeActiveState);
-        }
-        itemRouteCreateActive = menu.findItem(R.id.ocpn_route_create_active);
-        if (null != itemRouteCreateActive) {
-            itemRouteCreateActive.setVisible(menuState.routeActiveState);
-        }
+                // Track icon
+                itemTrackActive = menu.findItem(R.id.ocpn_action_track_toggle_ison);
+                if (null != itemTrackActive) {
+                    itemTrackActive.setVisible(menuState.trackActive);
+                }
+                itemTrackInActive = menu.findItem(R.id.ocpn_action_track_toggle_isoff);
+                if (null != itemTrackInActive) {
+                    itemTrackInActive.setVisible(!menuState.trackActive);
+                }
 
-        // Track icon
-        itemTrackActive = menu.findItem(R.id.ocpn_action_track_toggle_ison);
-        if (null != itemTrackActive) {
-            itemTrackActive.setVisible(menuState.trackActive);
-        }
-        itemTrackInActive = menu.findItem(R.id.ocpn_action_track_toggle_isoff);
-        if (null != itemTrackInActive) {
-            itemTrackInActive.setVisible(!menuState.trackActive);
-        }
-
-
-        MenuItem itemSendEmailActive = menu.findItem(R.id.ocpn_action_email);
-        itemSendEmailActive.setVisible(false);
+                MenuItem itemSendEmailActive = menu.findItem(R.id.ocpn_action_email);
+                itemSendEmailActive.setVisible(false);
+            }
+        });
 
     }
 
