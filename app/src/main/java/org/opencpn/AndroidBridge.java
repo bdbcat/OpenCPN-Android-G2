@@ -558,52 +558,69 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+
+                case "START_BT_SERVICE": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = connectivityManager.startBTService(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
+                case "SEND_BT_MESSAGE": {
+                    String val = obj.optString("sparameter", "");
+                    String jResult = connectivityManager.sendBTMessage(val);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", jResult);
+                    return result.toString();
+                }
+
                 case "START_BT_SCAN": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = "";//startBlueToothScan(val);
+                    String jResult = connectivityManager.startBlueToothScan(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 
                 case "STOP_BT_SCAN": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = "";//stopBlueToothScan(val);
+                    String jResult = connectivityManager.stopBlueToothScan(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 
 
                 case "GET_BT_SCAN_RESULT": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = "";//getBlueToothScanResults(val);
+                    String jResult = connectivityManager.getBlueToothScanResults(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 
-                case "stopBTService": {
+                case "STOP_BT_SERVICE": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = "";//stopBTService(val);
+                    String jResult = connectivityManager.stopBTService(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 
@@ -704,26 +721,6 @@ public class AndroidBridge {
                 case "SHOW_TOAST": {
                     String val = obj.optString("sparameter", "");
                     String jResult = hostEnvironment.showToast(val);
-
-                    JSONObject result = new JSONObject();
-                    result.put("status", "OK");
-                    result.put("payload", jResult);
-                    return result.toString();
-                }
-
-                case "START_BT_SERVICE": {
-                    String val = obj.optString("sparameter", "");
-                    String jResult = connectivityManager.startBTService(val);
-
-                    JSONObject result = new JSONObject();
-                    result.put("status", "OK");
-                    result.put("payload", jResult);
-                    return result.toString();
-                }
-
-                case "SEND_BT_MESSAGE": {
-                    String val = obj.optString("sparameter", "");
-                    String jResult = connectivityManager.sendBTMessage(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");

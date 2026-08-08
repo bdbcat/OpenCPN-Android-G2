@@ -53,12 +53,13 @@ public class AppController {
 
     public void init(Bundle savedInstanceState) {
         nativeBridge = new NativeBridgeManager();
+        nativeLib = OCPNNativeLib.getInstance();
 
         preferences = new PreferencesManager(activity);
         connectivityHelper = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
-        hostEnvironmaent = new HostEnvironment(activity, OCPNNativeLib.getInstance(),  connectivityManager, nativeBridge);
+        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge);
 
         usb = new UsbController();
 
@@ -70,7 +71,6 @@ public class AppController {
                 nativeBridge
         );
 
-        nativeLib = OCPNNativeLib.getInstance();
 
         menuController = new MenuController(activity, nativeLib, this);
         toolbarController = new ToolbarController(activity, menuController);
