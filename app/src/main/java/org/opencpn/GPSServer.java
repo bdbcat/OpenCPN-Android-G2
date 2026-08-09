@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -122,22 +123,14 @@ public class GPSServer extends Service implements LocationListener {
     public GPSServer(){
     }
 
-    private boolean isInBackground(){
-        ActivityManager.RunningAppProcessInfo myProcess = new ActivityManager.RunningAppProcessInfo();
-        ActivityManager.getMyMemoryState(myProcess);
-        Boolean isInBackground = myProcess.importance != ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
-        Log.d("OpenCPN", myProcess.processName + " " + myProcess.importance + " " + isInBackground);
-        return  isInBackground;
-    }
-
-    @Override
+     @Override
     public void onCreate() {
         Log.d("OpenCPN", "GPS Service onCreate");
 
         if (Build.VERSION.SDK_INT >= 26) {
             String CHANNEL_ID = "my_channel_01";
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-                    "Channel human readable title",
+                    "GPS notification channel",
                     NotificationManager.IMPORTANCE_DEFAULT);
 
             ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
@@ -147,19 +140,19 @@ public class GPSServer extends Service implements LocationListener {
                     .setContentText("").build();
 
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    if (!isInBackground())
-                        startForeground(1, notification);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(
+                            1,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
                 } else {
                     startForeground(1, notification);
                 }
-            } catch (Exception e) {
+              } catch (Exception e) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                         e instanceof ForegroundServiceStartNotAllowedException
                 ) {
                     Log.i("OpenCPN", "GPS Service Not Started from background");
-                    Log.i("OpenCPN", "Try disable battery optimization");
-
                 }
             }
         }

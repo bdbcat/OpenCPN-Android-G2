@@ -35,11 +35,6 @@ public class ConnectivityHelper {
 
     }
 
-    public void cleanup() {
-        // TODO unregister network callbacks
-        // TODO release multicast lock
-    }
-
     public String getIpAddress() {
         return getDeviceIpAddress(connectivityManager);
     }

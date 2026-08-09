@@ -163,13 +163,10 @@ public class AppController {
     }
 
     public void onStop() {
-        usb.stop(activity);
         nativeBridge.onStop();
     }
 
-    public void onDestroy() {
-        connectivityHelper.cleanup();
-    }
+    public void onDestroy() {}
 
     // ---------------------------------------------------
     // UI / LAYOUT
