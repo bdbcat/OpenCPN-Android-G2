@@ -25,10 +25,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
-import android.window.OnBackInvokedDispatcher;
+
 import org.opencpn.opencpn.R;
 import org.qtproject.qt5.android.bindings.QtActivity;
-import org.opencpn.OCPNConnectivityManager;
+
 
 public class MyQtActivity extends QtActivity {
 
@@ -204,6 +204,7 @@ public class MyQtActivity extends QtActivity {
 
         ViewGroup root = findViewById(android.R.id.content);
         root.post(() -> app.setupHybridLayout(root));
+        app.getHostEnvironment().setupEdgeToEdge();
     }
 
 

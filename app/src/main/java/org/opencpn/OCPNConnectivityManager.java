@@ -122,6 +122,23 @@ public class OCPNConnectivityManager {
         };
     }
 
+    public void onResume(){
+        if (null != uSerialHelper) {
+            uSerialHelper.initUSBSerial(activity);
+            m_scannedSerial = scanSerialPorts(UsbSerialHelper.SCAN);      // Full scan.
+        }
+
+        //Register SailTimer broadcast receiver for updates
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity.registerReceiver( mSailImerUpdateReceiver,
+                    makeSailTimerUpdateIntentFilter(), activity.RECEIVER_NOT_EXPORTED);
+        }
+    }
+
+    public void onPause() {
+        activity.unregisterReceiver(mSailImerUpdateReceiver);
+    }
+
     public void handlePermissionResults(int requestCode, String[] permissions, int[] grantResults) {
         // If request is cancelled, the result arrays are empty.
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -790,7 +807,7 @@ public class OCPNConnectivityManager {
     }
 
     //BroadcastReceiver which receives broadcasted Intents
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mSailImerUpdateReceiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -942,7 +959,7 @@ public class OCPNConnectivityManager {
 
     }
 
-    private static IntentFilter makeGattUpdateIntentFilter() {
+    private static IntentFilter makeSailTimerUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
         return intentFilter;

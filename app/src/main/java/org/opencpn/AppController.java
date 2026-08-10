@@ -5,16 +5,22 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.window.OnBackInvokedDispatcher;
 import android.os.Build;
+
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import org.opencpn.opencpn.R;
 
@@ -46,6 +52,8 @@ public class AppController {
     public AppController(Activity activity) {
         this.activity = activity;
     }
+    public LinearLayout m_container;
+
 
     // ---------------------------------------------------
     // INIT
@@ -59,7 +67,7 @@ public class AppController {
         connectivityHelper = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
 
-        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge);
+        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge, this);
 
         usb = new UsbController();
 
@@ -155,10 +163,12 @@ public class AppController {
 
     public void onResume() {
         inExit = false;
-        nativeBridge.onResume();
+        connectivityManager.onResume(); // Sailtimer/USBserial
+        //nativeBridge.onResume();
     }
 
     public void onPause() {
+        connectivityManager.onPause();  // Sailtimer/USBserial
         nativeBridge.onPause();
     }
 
@@ -185,42 +195,45 @@ public class AppController {
 
             root.removeAllViews();
 
-            LinearLayout container = new LinearLayout(activity);
-            container.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout m_container = new LinearLayout(activity);
+            m_container.setOrientation(LinearLayout.VERTICAL);
 
-            container.setLayoutParams(
+            m_container.setLayoutParams(
                     new FrameLayout.LayoutParams(
                             MATCH_PARENT,
                             MATCH_PARENT));
+
+
+            // Reserve space for the Android status bar.
+            // This view is outside the Qt/wx coordinate system.
+            View statusBarFiller = new View(activity);
+            statusBarFiller.setBackgroundColor(Color.BLACK);
+
+            LinearLayout.LayoutParams params =
+                    new LinearLayout.LayoutParams(
+                            MATCH_PARENT,
+                            hostEnvironmaent.m_insets.top);
+
+            m_container.addView(statusBarFiller, params);
 
             m_toolbarOverlay =
                     LayoutInflater.from(activity)
                             .inflate(
                                     R.layout.toolbar_overlay,
-                                    container,
+                                    m_container,
                                     false);
 
-            container.addView(m_toolbarOverlay);
-            container.addView(qtView);
+;           m_container.addView(m_toolbarOverlay);
+            m_container.addView(qtView);
+            root.addView(m_container);
 
-            root.addView(container);
-
-            // Delegate ALL toolbar behavior
-;
-            menuController.attachToolbar(m_toolbarOverlay);
-            menuController.applyButtonState();
 
             // Height reporting
-/*
-            toolbarOverlay.post(() -> {
-                int h = toolbarOverlay.getHeight();
-                Log.i("OpenCPN",
-                        "Toolbar height=" + h);
-                notifyToolbarHeight(h);
 
-            });
-*/
-        } catch (Exception e) {
+            // Delegate ALL toolbar behavior
+            menuController.attachToolbar(m_toolbarOverlay);
+            menuController.applyButtonState();
+       } catch (Exception e) {
             Log.e("OpenCPN",
                     "Hybrid layout failed",
                     e);

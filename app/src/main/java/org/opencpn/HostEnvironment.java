@@ -15,7 +15,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaDrm;
@@ -33,13 +35,22 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.app.AlertDialog;
 import android.view.Surface;
 import android.content.pm.ActivityInfo;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.graphics.Insets;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -90,10 +101,11 @@ public class HostEnvironment {
     private final OCPNNativeLib nativeLib;
     private final OCPNConnectivityManager connectivityManager;
     private final NativeBridgeManager nb;
+    private final AppController ac;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
-    public android.graphics.Insets m_insets = android.graphics.Insets.NONE;
+    public MyInsets m_insets;
 
     private int insetTop = 0;
     private int insetBottom = 0;
@@ -126,12 +138,21 @@ public class HostEnvironment {
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
     private BroadcastReceiver mLocaleChangeReceiver;
 
-    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb) {
+    // Static nested class
+    public static class MyInsets {
+        int top;
+        int bottom;
+        int left;
+        int right;
+    }
+
+    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb, AppController _ac) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
         this.connectivityManager = cm;
         this.nb = nb;
+        this.ac = _ac;
     }
 
 
@@ -149,6 +170,9 @@ public class HostEnvironment {
             m_selID = m_OCPNWVID;
         else
             m_selID = m_OCPNUUID;
+
+        m_insets = new MyInsets();
+
 
         m_systemName = getSystemName(m_selID);
         Log.i("OpenCPN", "msn " + m_systemName);
@@ -224,6 +248,42 @@ public class HostEnvironment {
  */
     }
 
+
+
+    public void setupEdgeToEdge() {
+        Window window = activity.getWindow();
+        View decor = window.getDecorView();
+
+        View root = activity.findViewById(android.R.id.content);
+        root.setBackgroundColor(Color.rgb(40, 0, 0));
+
+         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false);
+         } else {
+            decor.setSystemUiVisibility(
+                    decor.getSystemUiVisibility()
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+        }
+
+        decor.setOnApplyWindowInsetsListener((v, insets) -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                android.graphics.Insets i =
+                        insets.getInsets(WindowInsets.Type.systemBars());
+                m_insets.left = i.left;
+                m_insets.top = i.top;
+                m_insets.right = i.right;
+                m_insets.bottom = i.bottom;
+            } else {
+                m_insets.top = insets.getSystemWindowInsetTop();
+                m_insets.bottom = insets.getSystemWindowInsetBottom();
+                m_insets.left = insets.getSystemWindowInsetLeft();
+                m_insets.right = insets.getSystemWindowInsetRight();
+            }
+           return insets;
+        });
+    }
 
     private String getUUID(Context context) {
         final String androidId = Settings.Secure.getString(
@@ -445,7 +505,7 @@ public class HostEnvironment {
     }
 
     public void setInsets(android.graphics.Insets insets) {
-        m_insets = insets;
+        //m_insets = insets;
     }
 
     public String getDisplayMetrics() {
