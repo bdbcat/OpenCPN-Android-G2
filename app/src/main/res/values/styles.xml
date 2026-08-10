@@ -94,8 +94,16 @@
         </style>
 
     <style name="OpenCPNThemeMaterial"
-        parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
         <item name="android:itemBackground">#202020</item>
+
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#202020</item>
+
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:navigationBarColor">#202020</item>
+
 
     </style>
 
