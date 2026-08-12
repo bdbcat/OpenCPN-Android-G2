@@ -35,6 +35,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -255,7 +256,7 @@ public class HostEnvironment {
         View decor = window.getDecorView();
 
         View root = activity.findViewById(android.R.id.content);
-        root.setBackgroundColor(Color.rgb(40, 0, 0));
+        root.setBackgroundColor(Color.rgb(0, 0, 0));
 
          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.setDecorFitsSystemWindows(false);
@@ -281,7 +282,20 @@ public class HostEnvironment {
                 m_insets.left = insets.getSystemWindowInsetLeft();
                 m_insets.right = insets.getSystemWindowInsetRight();
             }
-           return insets;
+
+            nativeLib.postJsonEvent(JSONHelpers.makeEvent(0,"Resize_Frame_on_insets"));
+
+            // Adjust the toolbar/menu layout to respect the insets.
+            final int rightInset = m_insets.right;
+            if(ac.m_container != null && ac.m_toolbarOverlay != null) {
+                ac.m_container.post(() -> {
+                    int width = ac.m_container.getWidth();
+                    ViewGroup.LayoutParams lp =  ac.m_toolbarOverlay.getLayoutParams();
+                    lp.width = width - rightInset;
+                    ac.m_toolbarOverlay.setLayoutParams(lp);
+                });
+            }
+            return insets;
         });
     }
 
@@ -550,9 +564,37 @@ public class HostEnvironment {
 
         int tbs = getEffectiveTopInset();
 
+        int qtWidth = ac.m_qtView.getWidth();
+        int qtHeight = ac.m_qtView.getHeight();
+/*
+        Log.i("OpenCPN", "--------------------------------------");
+        Log.i("OpenCPN", "screen=" + dm.heightPixels);
+        Log.i("OpenCPN", "container=" + ac.m_container.getHeight());
+        Log.i("OpenCPN", "toolbar=" + ac.m_toolbarOverlay.getHeight());
+        Log.i("OpenCPN", "qtHeight=" + ac.m_qtView.getHeight());
+        Log.i("OpenCPN", "qtWidth=" + ac.m_qtView.getWidth());
+        Log.i("OpenCPN", "inset_top=" + m_insets.top);
+        Log.i("OpenCPN", "inset_bottom=" + m_insets.bottom);
+        int frameSize_v = ac.m_qtView.getHeight() - m_insets.bottom;
+        Log.i("OpenCPN", "frame size_v=" + frameSize_v);
+        int frameSize_h = ac.m_qtView.getWidth() ;
+        Log.i("OpenCPN", "frame size_h=" + frameSize_h);
+
+        Log.i("OpenCPN",
+                "filler top=" + ac.m_statusBarFiller.getTop()
+                        + " bottom=" + ac.m_statusBarFiller.getBottom());
+
+        Log.i("OpenCPN",
+                "toolbar top=" + ac.m_toolbarOverlay.getTop()
+                        + " bottom=" + ac.m_toolbarOverlay.getBottom());
+
+        Log.i("OpenCPN",
+                "qt top=" + ac.m_qtView.getTop()
+                        + " bottom=" + ac.m_qtView.getBottom());
+*/
         return String.format("%f;%f;%d;%d;%d;%d;%d;%d;%d;%d;%f;%d;%d;%d;%d;%d",
                 dm.xdpi, dm.density, dm.densityDpi,
-                width, height - statusBarHeight,
+                qtWidth, qtHeight,
                 width, height,
                 dm.widthPixels, dm.heightPixels,
                 actionBarHeight, tsize, navBarHeight,

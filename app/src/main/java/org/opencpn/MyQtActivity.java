@@ -148,6 +148,8 @@ public class MyQtActivity extends QtActivity {
         app.init(savedInstanceState);
 
         initNativeLibraryDir();
+        nativeLib = OCPNNativeLib.getInstance();
+
         checkPermissions();
     }
 
@@ -378,7 +380,7 @@ public class MyQtActivity extends QtActivity {
                 " toolbar=" + toolbarHeight);
 
         if (nativeLib != null) {
-            nativeLib.onScreenResized(w, h, toolbarHeight);
+            //nativeLib.onScreenResized(w, h, toolbarHeight);
         }
     }
 

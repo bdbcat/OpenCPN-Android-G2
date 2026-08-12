@@ -45,7 +45,10 @@ public class AppController {
     private boolean m_inExit;
     private boolean m_backButtonEnable = true;
     private AndroidBridge androidBridge;
-    private View m_toolbarOverlay;
+    public View m_toolbarOverlay;
+    public View m_qtView;
+    public View m_statusBarFiller;
+
     private MigrateController migrateController;
     private ProcessController processController;
 
@@ -187,6 +190,7 @@ public class AppController {
         try {
 
             View qtView = root.getChildAt(0);
+            m_qtView = qtView;
 
             if (qtView == null) {
                 Log.e("OpenCPN", "Qt view not found");
@@ -195,7 +199,7 @@ public class AppController {
 
             root.removeAllViews();
 
-            LinearLayout m_container = new LinearLayout(activity);
+            m_container = new LinearLayout(activity);
             m_container.setOrientation(LinearLayout.VERTICAL);
 
             m_container.setLayoutParams(
@@ -206,15 +210,15 @@ public class AppController {
 
             // Reserve space for the Android status bar.
             // This view is outside the Qt/wx coordinate system.
-            View statusBarFiller = new View(activity);
-            statusBarFiller.setBackgroundColor(Color.BLACK);
+            m_statusBarFiller = new View(activity);
+            m_statusBarFiller.setBackgroundColor(Color.BLACK);
 
             LinearLayout.LayoutParams params =
                     new LinearLayout.LayoutParams(
                             MATCH_PARENT,
                             hostEnvironmaent.m_insets.top);
 
-            m_container.addView(statusBarFiller, params);
+            m_container.addView(m_statusBarFiller, params);
 
             m_toolbarOverlay =
                     LayoutInflater.from(activity)

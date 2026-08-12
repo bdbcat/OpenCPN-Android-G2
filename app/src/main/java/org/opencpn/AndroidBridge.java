@@ -45,7 +45,7 @@ public class AndroidBridge {
 
     public String dispatchCommand(String payload) {
 
-        Log.i("OpenCPN", "JNI RX: " + payload);
+        //Log.i("OpenCPN", "JNI RX: " + payload);
 
         try {
 
