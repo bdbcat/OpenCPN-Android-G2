@@ -84,6 +84,23 @@ public class FileController {
                 return "Exception";
             }
         }
+        else if (outFile.startsWith("content://")) {
+            try {
+                Uri uri = Uri.parse(outFile);
+                OutputStream outStream = activity.getContentResolver().openOutputStream(uri);
+                FileInputStream inStream = new FileInputStream(inFile);
+
+                copyFile(inStream, outStream);
+                inStream.close();
+                outStream.flush();
+                outStream.close();
+                return "OK";
+            } catch (Exception e) {
+                Log.i("OpenCPN", "SecureFileCopy Exception");
+                return "Exception";
+            }
+        }
+
 
         //if (outFile.length() == 0)
         //    outFile = m_fileChooserFinalString;
@@ -199,6 +216,55 @@ public class FileController {
         }
     }
 
+    public String fileDomainSelector(int seq, boolean isImport) {
+        activity.runOnUiThread(() -> {
+            StorageLocationDialog.show(
+                    activity,
+                    isImport,      // false = Export
+                    new StorageLocationDialog.Callback() {
+
+                        @Override
+                        public void onLocationSelected(
+                                StorageLocationDialog.StorageLocation location,
+                                boolean rememberChoice) {
+                            m_rememberChoice = rememberChoice;
+
+                            switch (location) {
+
+                                case APP_PRIVATE:
+                                    Log.i("OpenCPN","^^^^^^PRIVATE");
+                                    nativeBridge.postJsonEvent(
+                                            JSONHelpers.makeEvent(seq,
+                                                    "fileDomainSelected",
+                                                    "domain", "Private",
+                                                    "action", "select"));
+                                    break;
+
+                                case SHARED_DOCUMENTS:
+                                    Log.i("OpenCPN","^^^^^^SYSTEM");
+                                    nativeBridge.postJsonEvent(
+                                            JSONHelpers.makeEvent(seq,
+                                                    "fileDomainSelected",
+                                                    "domain", "System",
+                                                    "action", "select"));
+                                    break;
+
+                                case CANCELLED:
+                                    nativeBridge.postJsonEvent(
+                                            JSONHelpers.makeEvent(seq,
+                                                    "fileDomainSelected",
+                                                    "domain", "Cancel",
+                                                    "action", "select"));
+                                    break;
+                            }
+                        }
+                    });
+        });
+
+        return "OK";
+
+    }
+
     //--------------------------------------------------------------------------------------
     //  Directory chooser dialog for local sandbox directories
     //  Async version
@@ -309,8 +375,8 @@ public class FileController {
                     String fileName = file.getAbsolutePath();
                     nativeBridge.postJsonEvent(
                             JSONHelpers.makeEvent(seq,
-                                    "privateDirSelected",
-                                    "dirName", fileName,
+                                    "privateFileSelected",
+                                    "fileName", fileName,
                                     "action", "select"));
 
                 }
@@ -583,7 +649,7 @@ public class FileController {
         return safManager.ensureTreeAccess(seq, treeId);
     }
 
-    public String fileChooserDialog(final int seq, final String initialDir, final String Title, final String Suggestion, final String wildcard) {
+    public String fileChooserDialogSAF(final int seq, final String initialDir, final String Title, final String Suggestion, final String wildcard) {
         String safeDir = activity.getExternalFilesDir(null).getPath();
         boolean bSafe = initialDir.startsWith(safeDir);
 
@@ -651,25 +717,27 @@ public class FileController {
                     Uri selectedTreeUri = Uri.parse(sUri);
                     DocumentFile documentFile = DocumentFile.fromTreeUri(activity, selectedTreeUri);
 
-                    File ff = null;
+                    safManager.openTreePicker();
+
+                    //File ff = null;
 
                     //File ff = getFile(this, documentFile);
 
-                    String path = null;
-                    if (ff != null) {
-                        path = ff.getAbsolutePath();
-                    } else {
+                    //String path = null;
+                    //if (ff != null) {
+                    //    path = ff.getAbsolutePath();
+                    //} else {
                         //   m_filechooserString = "cancel:";
                         //   m_FileChooserDone = true;
-                        return "OK";
-                    }
+                    //    return "OK";
+                   // }
 
                     // All is well, fire off the equivalent of a "Save-as" dialog.
-                    Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    intent.setType("*/*");       // Need this for ACTION_OPEN_DOCUMENT
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
-                    intent.setType("application/text");
-                    intent.putExtra(Intent.EXTRA_TITLE, Suggestion);
+                    //Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    //intent.setType("*/*");       // Need this for ACTION_OPEN_DOCUMENT
+                    //intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    //intent.setType("application/text");
+                    //intent.putExtra(Intent.EXTRA_TITLE, Suggestion);
                     //m_filechooserCacheString = Suggestion;
                     //intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, selectedTreeUri);
                     //startActivityForResult(intent, OCPN_SAVE_AS_FILE_CHOOSER_REQUEST_CODE);
@@ -678,6 +746,70 @@ public class FileController {
                     // StartSAFDirSelector("Documents", Suggestion);
                 }
             }
+        }
+        return "OK";
+    }
+
+    public String fileSaveAsDialogSAF(final int seq, final String initialDir, final String Title, final String Suggestion) {
+        String safeDir = activity.getExternalFilesDir(null).getPath();
+        boolean bSafe = initialDir.startsWith(safeDir);
+
+        // Check to see if "scoped storage model is active (Anroid 10 and above)
+        if (!bSafe && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q)) {
+            // A bit of a hack...
+            // Get the specified directory by taking all after /storage/emoulated/0/
+            int index = initialDir.indexOf('0');
+            String init_last_seg = "";
+            if (index + 2 < initialDir.length())
+                init_last_seg = initialDir.substring(index + 2);
+
+            // Some initial directory requests are wrong (e.g. vdr_pi). Fix it here
+            if (init_last_seg.startsWith("Android")) {
+                int indexA = init_last_seg.indexOf('/');
+                if (indexA + 1 < init_last_seg.length()) {
+                    init_last_seg = init_last_seg.substring(indexA + 1);
+                }
+            }
+
+            // choosing a directory to save a specified file
+
+                // Check to see it resisted permission for the target directory already exist
+                List<UriPermission> list = activity.getContentResolver().getPersistedUriPermissions();
+                boolean bfound = false;
+                for (int i = 0; i < list.size(); i++) {
+                    if (list.get(i).isWritePermission()) {
+                        Uri p = list.get(i).getUri();
+                        String last = p.getLastPathSegment();
+                        if (last != null) {
+                            if (last.equals("primary:" + init_last_seg)) {
+                                bfound = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (bfound) {       // directory permission already available
+                    // Prepare the required new file using SAF
+                    //Get the tree Uri from persistant storage
+
+                    // verify the persisted access to the target dir
+                    //  If not available, then re-run the SAF directory picker.
+                    SharedPreferences preferences = activity.getSharedPreferences("OCPN_PERSISTED_PERMISSION", Context.MODE_PRIVATE);
+                    String sUri = preferences.getString("filestorageuri", "");
+                    if (sUri.isEmpty()) {
+                        //StartSAFDirSelector(Suggestion, "Documents");
+                        return "OK";
+                    }
+
+                    // All is well, fire off the equivalent of a "Save-as" dialog.
+                    safManager.saveDocumentAs(seq, Suggestion);
+
+                } else {      // Not persistend yet, so do it now.
+                    // This would be the path for very first time access to a new directory
+                    // StartSAFDirSelector("Documents", Suggestion);
+                }
+
         }
         return "OK";
     }

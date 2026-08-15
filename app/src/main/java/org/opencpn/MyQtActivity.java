@@ -344,9 +344,9 @@ public class MyQtActivity extends QtActivity {
                             int finalWidth = root.getWidth();
                             int finalHeight = root.getHeight();
 
-                            Log.i("OpenCPN",
-                                    "FINAL layout size: "
-                                            + finalWidth + "x" + finalHeight);
+                           // Log.i("OpenCPN",
+                           //         "FINAL layout size: "
+                           //                 + finalWidth + "x" + finalHeight);
 
                             int toolbarHeight = 0;
 
@@ -363,10 +363,10 @@ public class MyQtActivity extends QtActivity {
                             qtView.getLayoutParams().height = MATCH_PARENT;
                             qtView.requestLayout();
 
-                            dispatchRotationToNative(
-                                    finalWidth,
-                                    finalHeight,
-                                    toolbarHeight);
+                            //dispatchRotationToNative(
+                            //        finalWidth,
+                            //        finalHeight,
+                            //        toolbarHeight);
                         });
 
                     }

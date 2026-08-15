@@ -224,7 +224,35 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
-                case "FILE_CHOOSER": {
+                case "FILE_DOMAIN_CHOOSER": {
+                    int seq = obj.optInt("seq", -1);
+                    boolean ioMode = obj.optBoolean("IO_mode", false);
+
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.fileDomainSelector(seq, ioMode);
+
+                    String payload_t = aresult;
+                    if (aresult.startsWith("cancel"))
+                        payload_t = "";
+                    if (aresult.startsWith("exception"))
+                        payload_t = "";
+
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", payload_t);
+                    return result.toString();
+                }
+
+
+                //  Use system file picker and SAF to select a file
+                //  Commonly used for GPX file import
+                case "FILE_CHOOSER_SAF": {
                     String initialDir = obj.optString("initialDir", "");
                     String title = obj.optString("title", "");
                     String suggestion = obj.optString("suggestion", "");
@@ -238,13 +266,36 @@ public class AndroidBridge {
                         result.put("message", "INVALID_SEQ");
                     }
 
-                    String aresult = fileController.fileChooserDialog(seq, initialDir, title, suggestion, wildcard);
+                    String aresult = fileController.fileChooserDialogSAF(seq, initialDir, title, suggestion, wildcard);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", aresult);
                     return result.toString();
                 }
+
+                //  Use system file picker and SAF to save a file
+                //  Commonly used for GPX file export
+                case "FILE_SAVE_AS_SAF": {
+                    String initialDir = obj.optString("initialDir", "");
+                    String title = obj.optString("title", "");
+                    String suggestion = obj.optString("suggestion", "");
+
+                    int seq = obj.optInt("seq", -1);
+                    if (seq < 0) {
+                        JSONObject result = new JSONObject();
+                        result.put("status", "ERROR");
+                        result.put("message", "INVALID_SEQ");
+                    }
+
+                    String aresult = fileController.fileSaveAsDialogSAF(seq, initialDir, title, suggestion);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", aresult);
+                    return result.toString();
+                }
+
 
  //                public String privateDirChooserDialog(final int seq, final String initialDir, final String Title, final int addFile) {
 
@@ -279,6 +330,7 @@ public class AndroidBridge {
 
                 // Use afilechooser2 to select a file from Android sandbox
                 //  Commonly used to add Tide/Current databases
+                //  or in private GPX file import.
                 case "PRIVATE_FILE_CHOOSER_ASYNC": {
                     String initialDir = obj.optString("initialDir", "");
                     String title = obj.optString("title", "");

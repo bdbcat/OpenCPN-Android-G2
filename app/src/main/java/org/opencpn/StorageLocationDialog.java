@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +22,17 @@ public class StorageLocationDialog {
         SHARED_DOCUMENTS,
         CANCELLED
     }
+    static final int COLOR_NORMAL = Color.LTGRAY;
+    static final int COLOR_SELECTED = Color.rgb(40, 100, 200);
+    static final int selectedStroke = Color.rgb(40, 100, 200);
+    private static final int normalStroke = Color.rgb(40, 40, 40);;
+
+    static final int dimTitle = Color.rgb(32, 32, 32);
+    static final int dimDescription = Color.rgb(64, 64, 64);
+
+    static final int selectedTitleColor  = Color.rgb(140, 140, 140);
+    static final int selectedDescriptionColor = Color.rgb(170, 170, 170);
+
 
     public interface Callback {
         void onLocationSelected(StorageLocation location,
@@ -142,6 +154,23 @@ public class StorageLocationDialog {
 
         builder.show();
     }
+
+    private static void selectCard(MaterialCardView selectedCard,
+                            TextView selectedTitle,
+                            TextView selectedDescription,
+                            MaterialCardView otherCard,
+                            TextView otherTitle,
+                            TextView otherDescription) {
+
+        selectedCard.setStrokeColor(selectedStroke);
+        selectedTitle.setTextColor(selectedTitleColor);
+        selectedDescription.setTextColor(selectedDescriptionColor);
+
+        otherCard.setStrokeColor(normalStroke);
+        otherTitle.setTextColor(dimTitle);
+        otherDescription.setTextColor(dimDescription);
+    }
+
     public static void show(Activity activity,
                              boolean isImport,
                              Callback callback) {
@@ -160,9 +189,14 @@ public class StorageLocationDialog {
 
         MaterialCardView cardPrivate =
                 view.findViewById(R.id.card_private);
+        TextView privateTitle = view.findViewById(R.id.card_private_title);
+        TextView privateDescriptionText = view.findViewById(R.id.card_private_text);
 
         MaterialCardView cardDocuments =
                 view.findViewById(R.id.card_documents);
+        TextView documentsTitle = view.findViewById(R.id.card_documents_title);
+        TextView documentsDescriptionText = view.findViewById(R.id.card_documents_description);
+
 
         CheckBox checkRemember =
                 view.findViewById(R.id.check_remember);
@@ -171,28 +205,50 @@ public class StorageLocationDialog {
                 { StorageLocation.APP_PRIVATE };
 
         cardPrivate.setChecked(true);
+        selectCard(cardPrivate,
+                privateTitle,
+                privateDescriptionText,
+                cardDocuments,
+                documentsTitle,
+                documentsDescriptionText);
 
         cardPrivate.setOnClickListener(v -> {
 
             selected[0] = StorageLocation.APP_PRIVATE;
+            selectCard(cardPrivate,
+                    privateTitle,
+                    privateDescriptionText,
+                    cardDocuments,
+                    documentsTitle,
+                    documentsDescriptionText);
 
-            cardPrivate.setChecked(true);
-            cardDocuments.setChecked(false);
+                //updateCardSelection(false);
+            //cardPrivate.setStrokeColor(COLOR_SELECTED);
+            //cardDocuments.setStrokeColor(COLOR_NORMAL);
+
         });
 
         cardDocuments.setOnClickListener(v -> {
 
             selected[0] = StorageLocation.SHARED_DOCUMENTS;
+            selectCard(cardDocuments,
+                    documentsTitle,
+                    documentsDescriptionText,
+                    cardPrivate,
+                    privateTitle,
+                    privateDescriptionText);
 
-            cardPrivate.setChecked(false);
-            cardDocuments.setChecked(true);
+//            updateCardSelection(true);
+            //cardPrivate.setStrokeColor(COLOR_NORMAL);
+            //cardDocuments.setStrokeColor(COLOR_SELECTED);
+
         });
 
         TextView subtitle =
                 view.findViewById(R.id.subtitle);
 
         TextView documentsDescription =
-                view.findViewById(R.id.documents_description);
+                view.findViewById(R.id.card_documents_description);
 
         if (isImport) {
             subtitle.setText(
@@ -212,7 +268,16 @@ public class StorageLocationDialog {
         AlertDialog dialog =
                 new AlertDialog.Builder(themedContext)
                         .setView(view)
-                        .setNegativeButton("Cancel", null)
+                        .setNegativeButton("Cancel",
+                                (d, which) -> {
+                                    boolean rememberChoice =
+                                            checkRemember.isChecked();
+                                    callback.onLocationSelected(
+                                            StorageLocation.CANCELLED,
+                                            rememberChoice);
+                                })
+
+
                         .setPositiveButton("Continue",
                                 (d, which) -> {
                                     boolean rememberChoice =

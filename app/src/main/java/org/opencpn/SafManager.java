@@ -33,6 +33,7 @@ public class SafManager {
         int seq;
         String operation;
         String purpose;
+        String originalFileName;
 
         PendingRequest(int seq,
                        String operation,
@@ -41,6 +42,16 @@ public class SafManager {
             this.seq = seq;
             this.operation = operation;
             this.purpose = purpose;
+        }
+        PendingRequest(int seq,
+                   String operation,
+                   String purpose,
+                   String originalFileName) {
+
+            this.seq = seq;
+            this.operation = operation;
+            this.purpose = purpose;
+            this.originalFileName = originalFileName;
         }
     }
 
@@ -323,6 +334,64 @@ public class SafManager {
         }
     }
 
+    public String saveDocumentAs(int seq, String document_name) {
+
+        int requestCode = allocateRequestCode();
+
+        pendingRequests.put(
+                requestCode,
+                new PendingRequest(
+                        seq,
+                        "CREATE_DOCUMENT",
+                        "",
+                        document_name));
+
+        try {
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.setType("*/*");       // Need this for ACTION_OPEN_DOCUMENT
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/text");
+            intent.putExtra(Intent.EXTRA_TITLE, document_name);
+
+            String suri = "content://com.android.externalstorage.documents/tree/primary%3ADocuments";
+            Uri initialUri = Uri.parse(suri);;
+            intent.putExtra(
+                    DocumentsContract.EXTRA_INITIAL_URI,
+                    initialUri
+            );
+
+            activity.startActivityForResult(intent, requestCode);
+/*
+            Intent intent =
+                    new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+            );
+
+            //intent.addCategory(Intent.CATEGORY_OPENABLE);;
+
+            String suri = "content://com.android.externalstorage.documents/tree/primary%3ADocuments";
+            Uri initialUri = Uri.parse(suri);;
+            intent.putExtra(
+                    DocumentsContract.EXTRA_INITIAL_URI,
+                    initialUri
+            );
+
+            activity.startActivityForResult(
+                    intent,
+                    requestCode );
+*/
+            return "OK";
+        }
+        catch(Exception e) {
+            Log.e(TAG, "saveDocument exception", e);
+            return "EXCEPTION";
+        }
+    }
+
     // --------------------------------------------------------------------
     // Launch SAF folder picker
     // --------------------------------------------------------------------
@@ -392,11 +461,11 @@ public class SafManager {
 
             case "CREATE_DOCUMENT":
 
-                //handleCreateDocumentResult(
-                //        pending,
-                //        resultCode,
-                //        data
-                //);
+                handleCreateDocumentResult(
+                        pending,
+                        resultCode,
+                        data
+                );
                 return true;
 
             default:
@@ -498,6 +567,13 @@ public class SafManager {
             }
 
             Uri fileUri = data.getData();
+            Uri uri = data.getData();
+
+            Log.i("OpenCPN", "URI: " + uri);
+            Log.i("OpenCPN", "authority: " + uri.getAuthority());
+            Log.i("OpenCPN", "documentId: " +
+                    DocumentsContract.getDocumentId(uri));
+
             if(fileUri == null) {
                 nativeBridge.postJsonEvent(
                         JSONHelpers.makeEvent(seq,
@@ -560,8 +636,94 @@ public class SafManager {
         }
     }
 
+    //handleCreateDocumentResult
+    private void handleCreateDocumentResult(PendingRequest pending, int resultCode, Intent data) {
+        int seq = pending.seq;
+        try {
 
+            if(resultCode != Activity.RESULT_OK) {
 
+                nativeBridge.postJsonEvent(
+                        JSONHelpers.makeEvent(seq,
+                                "safFileCreateCancelled"
+                        )
+                );
+
+                return;
+            }
+
+            if(data == null) {
+                nativeBridge.postJsonEvent(
+                        JSONHelpers.makeEvent(seq,
+                                "safFileCreateError",
+                                "reason",
+                                "null_intent"
+                        )
+                );
+                return;
+            }
+
+            Uri fileUri = data.getData();
+            if(fileUri == null) {
+                nativeBridge.postJsonEvent(
+                        JSONHelpers.makeEvent(seq,
+                                "safFileCreateError",
+                                "reason",
+                                "null_uri"
+                        )
+                );
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // Persist permissions immediately
+            // ------------------------------------------------------------
+
+            final int takeFlags =
+                    data.getFlags()
+                            & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+            ContentResolver resolver =
+                    activity.getContentResolver();
+
+            resolver.takePersistableUriPermission(
+                    fileUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            );
+
+            // ------------------------------------------------------------
+            // Notify native side
+            // ------------------------------------------------------------
+
+            String fileName = getFileName(fileUri, "");
+            nativeBridge.postJsonEvent(
+                    JSONHelpers.makeEvent(seq,
+                            "safFileCreateSelected",
+                            "uri",
+                            fileUri.toString(),
+                            "filename",
+                            pending.originalFileName
+                    )
+            );
+
+        }
+        catch(Exception e) {
+
+            Log.e(TAG,
+                    "HandleFileCreateResult exception",
+                    e);
+
+            nativeBridge.postJsonEvent(
+                    JSONHelpers.makeEvent(seq,
+                            "safFileCreateError",
+                            "reason",
+                            "exception"
+                    )
+            );
+        }
+    }
 
 
     private void handleTreePickerResult(int resultCode,
