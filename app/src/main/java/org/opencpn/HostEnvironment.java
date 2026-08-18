@@ -1,6 +1,7 @@
 package org.opencpn;
 
 
+import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import android.app.Activity;
@@ -138,6 +139,7 @@ public class HostEnvironment {
     private static String OCPNuniqueID = null;
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
     private BroadcastReceiver mLocaleChangeReceiver;
+    private boolean m_layoutUpdatePending = false;
 
     // Static nested class
     public static class MyInsets {
@@ -249,7 +251,44 @@ public class HostEnvironment {
  */
     }
 
+    private void scheduleLayoutUpdate() {
+        if (m_layoutUpdatePending)
+            return;
 
+        if(ac.m_container == null)
+            return;
+
+        m_layoutUpdatePending = true;
+
+        ac.m_container.post(() -> {
+            m_layoutUpdatePending = false;
+
+            int qtWidth = ac.m_container.getWidth();
+            int qtHeight = ac.m_container.getHeight();
+
+            nativeLib.postJsonEvent(JSONHelpers.makeEvent(0,"Resize_Frame_on_insets"));
+/*
+            Log.d("OpenCPN", "filler visibility=" +
+                    ac.m_statusBarFiller.getVisibility());
+
+            Log.d("OpenCPN", "container: "
+                    + ac.m_container.getTop() + ".."
+                    + ac.m_container.getBottom()
+                    + " h=" + ac.m_container.getHeight());
+
+            Log.d("OpenCPN", "toolbar: "
+                    + ac.m_toolbarOverlay.getTop() + ".."
+                    + ac.m_toolbarOverlay.getBottom()
+                    + " h=" + ac.m_toolbarOverlay.getHeight());
+
+            Log.d("OpenCPN", "qt: "
+                    + ac.m_qtView.getTop() + ".."
+                    + ac.m_qtView.getBottom()
+                    + " h=" + ac.m_qtView.getHeight());
+
+ */
+        });
+    }
 
     public void setupEdgeToEdge() {
         Window window = activity.getWindow();
@@ -283,9 +322,16 @@ public class HostEnvironment {
                 m_insets.right = insets.getSystemWindowInsetRight();
             }
 
-            nativeLib.postJsonEvent(JSONHelpers.makeEvent(0,"Resize_Frame_on_insets"));
+            // Layout filler not needed if top offset is 0, as for fullscreen.
+            boolean needFiller = m_insets.top > 0;
+            if(ac.m_statusBarFiller != null)
+                ac.m_statusBarFiller.setVisibility(needFiller ? View.VISIBLE : View.GONE);
 
-            // Adjust the toolbar/menu layout to respect the insets.
+            if(ac.m_container != null)
+                ac.m_container.requestLayout();
+            scheduleLayoutUpdate();
+
+            // Adjust the toolbar/menu layout to respect the insets, especially on the right.
             final int rightInset = m_insets.right;
             if(ac.m_container != null && ac.m_toolbarOverlay != null) {
                 ac.m_container.post(() -> {
@@ -553,11 +599,11 @@ public class HostEnvironment {
 
         // Fullscreen fix
         if (m_fullScreen) {
-            Point outPoint = new Point();
-            display.getRealSize(outPoint);
-            width = outPoint.x;
-            height = outPoint.y;
-            height += statusBarHeight;
+            //Point outPoint = new Point();
+            //display.getRealSize(outPoint);
+            //width = outPoint.x;
+            //height = outPoint.y;
+            //height += statusBarHeight;
         }
 
         float tsize = new Button(activity).getTextSize();
@@ -1273,6 +1319,7 @@ public class HostEnvironment {
                                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
 
                         activity.getWindow().getDecorView().setSystemUiVisibility(flags);
+
                     }
 
                 }
