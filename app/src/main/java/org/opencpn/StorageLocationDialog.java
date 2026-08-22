@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -155,20 +156,47 @@ public class StorageLocationDialog {
         builder.show();
     }
 
+    private static int themeColor(Context context, int attr) {
+        TypedValue tv = new TypedValue();
+
+        if (!context.getTheme().resolveAttribute(attr, tv, true))
+            return Color.TRANSPARENT;
+
+        if (tv.resourceId != 0)
+            return context.getResources().getColor(tv.resourceId, context.getTheme());
+
+        return tv.data;
+    }
+
+    private static int withAlpha(int color, int alpha) {
+        return Color.argb(
+                alpha,
+                Color.red(color),
+                Color.green(color),
+                Color.blue(color));
+    }
+
     private static void selectCard(MaterialCardView selectedCard,
                             TextView selectedTitle,
                             TextView selectedDescription,
                             MaterialCardView otherCard,
                             TextView otherTitle,
-                            TextView otherDescription) {
+                            TextView otherDescription,
+                            Activity activity) {
+        int surface = themeColor(activity, R.attr.colorSurface);
+        int primary = themeColor(activity, R.attr.colorPrimary);
+        int onSurface = themeColor(activity, R.attr.colorOnSurface);
+        int onPrimary = themeColor(activity, R.attr.colorOnPrimary);
 
-        selectedCard.setStrokeColor(selectedStroke);
-        selectedTitle.setTextColor(selectedTitleColor);
-        selectedDescription.setTextColor(selectedDescriptionColor);
+        selectedCard.setCardBackgroundColor(primary);
+        selectedCard.setStrokeColor(primary);
+        selectedTitle.setTextColor(onPrimary);
+        selectedDescription.setTextColor(withAlpha(onPrimary, 190));
 
-        otherCard.setStrokeColor(normalStroke);
-        otherTitle.setTextColor(dimTitle);
-        otherDescription.setTextColor(dimDescription);
+        otherCard.setCardBackgroundColor(surface);
+        otherCard.setStrokeColor(withAlpha(onSurface, 100));
+        otherTitle.setTextColor(withAlpha(onSurface, 100));
+        otherDescription.setTextColor(withAlpha(onSurface, 100));
     }
 
     public static void show(Activity activity,
@@ -210,7 +238,8 @@ public class StorageLocationDialog {
                 privateDescriptionText,
                 cardDocuments,
                 documentsTitle,
-                documentsDescriptionText);
+                documentsDescriptionText,
+                activity);
 
         cardPrivate.setOnClickListener(v -> {
 
@@ -220,11 +249,9 @@ public class StorageLocationDialog {
                     privateDescriptionText,
                     cardDocuments,
                     documentsTitle,
-                    documentsDescriptionText);
+                    documentsDescriptionText,
+                    activity);
 
-                //updateCardSelection(false);
-            //cardPrivate.setStrokeColor(COLOR_SELECTED);
-            //cardDocuments.setStrokeColor(COLOR_NORMAL);
 
         });
 
@@ -236,11 +263,8 @@ public class StorageLocationDialog {
                     documentsDescriptionText,
                     cardPrivate,
                     privateTitle,
-                    privateDescriptionText);
-
-//            updateCardSelection(true);
-            //cardPrivate.setStrokeColor(COLOR_NORMAL);
-            //cardDocuments.setStrokeColor(COLOR_SELECTED);
+                    privateDescriptionText,
+                    activity);
 
         });
 
