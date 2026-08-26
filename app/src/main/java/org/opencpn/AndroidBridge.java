@@ -187,6 +187,16 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                case "SHOW_BUSY_ICON": {
+                    int enable = obj.optInt("enable");
+                    hostEnvironment.showBusyCircle(enable == 1);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", "OK");
+
+                    return result.toString();
+                }
 
                 //----------------------------------------------------------------
                 // File management

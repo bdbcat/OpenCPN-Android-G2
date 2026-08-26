@@ -5,6 +5,7 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -35,6 +36,7 @@ import android.provider.Settings;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -46,13 +48,9 @@ import android.widget.Button;
 import android.app.AlertDialog;
 import android.view.Surface;
 import android.content.pm.ActivityInfo;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.Toast;
-
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.core.graphics.Insets;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -126,9 +124,7 @@ public class HostEnvironment {
     private double m_gminitialZoom;
     private double m_gminitialLat = 0.0;
     private double m_gminitialLon = 0.0;
-    private Semaphore mutexC;
-    private ProgressDialog ringProgressDialog = null;
-
+    private Dialog ringProgressDialog = null;
     private String m_ColorDialogString;
     private Boolean m_ColorDialogDone = false;;
     private static String m_UUID = null;
@@ -1548,51 +1544,65 @@ public class HostEnvironment {
         return ("OK");
     }
 
+    public void showBusyCircle(boolean enable) {
+        if (enable)
+            showBusyCircle();
+        else
+            hideBusyCircle();
+    }
+
     public String showBusyCircle() {
         //if(!m_fullScreen)
 
         {
 
-            mutexC = new Semaphore(0);
-
-            activity.runOnUiThread(new Runnable() {
+             activity.runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
-
                     if (null == ringProgressDialog) {
-                        Log.i("OpenCPN", "ShowBusyBuild");
-                        ringProgressDialog = new ProgressDialog(activity, R.style.MyTheme);
-                        ringProgressDialog.setCancelable(false);
-                        ringProgressDialog.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
+                        ringProgressDialog = new Dialog(activity, R.style.MyTheme);
 
+                        FrameLayout frame = new FrameLayout(activity);
+                        frame.setLayoutParams(new ViewGroup.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT));
+
+                        ProgressBar spinner = new ProgressBar(activity);
                         Drawable myIcon = activity.getResources().getDrawable(R.drawable.progressbar_custom);
-                        ringProgressDialog.setIndeterminateDrawable(myIcon);
+                        spinner.setIndeterminateDrawable(myIcon);
 
-                        //  THIS IS IMPORTANT...Keeps the busy spinner from surfacing the hidden navigation buttons.
-                        ringProgressDialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-                                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
-                    }
+                        frame.addView(spinner,
+                                new FrameLayout.LayoutParams(
+                                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                                        Gravity.CENTER));
+
+                        ringProgressDialog.setContentView(frame);
+                        ringProgressDialog.setCancelable(false);
+
+                        Window window = ringProgressDialog.getWindow();
+                        if (window != null) {
+                            window.setBackgroundDrawableResource(android.R.color.transparent);
+                            window.setDimAmount(0);
+
+                            window.setFlags(
+                                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+
+                            window.setLayout(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT);
+                        }
+                     }
 
                     ringProgressDialog.show();
 
-                    mutexC.release();
 
                 }
             });
         }
-
-        // One way to wait for the runnable to be done...
-        try {
-            //mutexC.acquire();            // Cannot get mutex until runnable above exits.
-            mutexC.tryAcquire(500, MILLISECONDS);            // Cannot get mutex until runnable above exits.
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        String ret = "";
-        return ret;
+        return "";
     }
 
     public String hideBusyCircle() {
@@ -1601,9 +1611,7 @@ public class HostEnvironment {
         //    return "";
         //}
 
-        mutexC = new Semaphore(0);
-
-        activity.runOnUiThread(new Runnable() {
+       activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
 
@@ -1614,21 +1622,10 @@ public class HostEnvironment {
                         ringProgressDialog.dismiss();
                     }
                 }
-
-                mutexC.release();
             }
         });
 
-        // One way to wait for the runnable to be done...
-        try {
-            //mutexC.acquire();            // Cannot get mutex until runnable above exits.
-            mutexC.tryAcquire(500, MILLISECONDS);            // Cannot get mutex until runnable above exits.
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        String ret = "";
-        return ret;
+        return "";
     }
 
     public String doColorPickerDialog(final int initialColor) {
