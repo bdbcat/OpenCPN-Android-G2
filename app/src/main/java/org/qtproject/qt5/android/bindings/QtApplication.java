@@ -102,7 +102,8 @@ public class QtApplication extends Application
                         }
                     }
                 }
-            } catch (Exception e) { }
+            } catch (Exception e) {
+            }
         }
     }
 

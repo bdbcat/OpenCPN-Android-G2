@@ -37,13 +37,9 @@
 package org.qtproject.qt5.android.bindings;
 
 import android.app.Service;
-import android.util.Log;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.os.Bundle;
 import android.os.IBinder;
-
-import org.qtproject.qt5.android.QtNative;
 
 public class QtService extends Service
 {
@@ -55,17 +51,7 @@ public class QtService extends Service
     /////////////// PLEASE DO NOT CHANGE THE FOLLOWING CODE //////////////////////////
     //////////////////////////////////////////////////////////////////////////////////
     protected void onCreateHook() {
-        // the application has already started
-        // do not reload everything again
-        if (QtNative.isStarted()) {
-            m_loader = null;
-            Log.w(QtNative.QtTAG,
-                "A QtService tried to start in the same process as an initiated " +
-                "QtActivity. That is not supported. This results in the service " +
-                "functioning as an Android Service detached from Qt.");
-        } else {
-            m_loader.onCreate();
-        }
+        m_loader.onCreate();
     }
     @Override
     public void onCreate()
@@ -167,14 +153,4 @@ public class QtService extends Service
         return super.onUnbind(intent);
     }
     //---------------------------------------------------------------------------
-
-    public boolean loadApplication(Service service, ClassLoader classLoader, Bundle loaderParams)
-    {
-        return QtNative.serviceDelegate().loadApplication(service, classLoader, loaderParams);
-    }
-
-    public boolean startApplication()
-    {
-       return QtNative.serviceDelegate().startApplication();
-    }
 }

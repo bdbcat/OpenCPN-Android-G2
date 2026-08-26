@@ -167,7 +167,7 @@ public class AppController {
     public void onResume() {
         inExit = false;
         connectivityManager.onResume(); // Sailtimer/USBserial
-        //nativeBridge.onResume();
+        nativeBridge.onResume();
     }
 
     public void onPause() {

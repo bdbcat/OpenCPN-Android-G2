@@ -36,7 +36,6 @@
 
 package org.qtproject.qt5.android.bindings;
 
-import android.os.Bundle;
 import android.content.ComponentName;
 import android.content.pm.PackageManager;
 
@@ -56,10 +55,8 @@ public class QtServiceLoader extends QtLoader {
             return;
         }
 
-        if (QtApplication.m_delegateObject != null && QtApplication.onCreate != null) {
-            Bundle bundle = null;
-            QtApplication.invokeDelegateMethod(QtApplication.onCreate, bundle);
-        }
+        if (QtApplication.m_delegateObject != null && QtApplication.onCreate != null)
+            QtApplication.invokeDelegateMethod(QtApplication.onCreate);
         startApp(true);
     }
 

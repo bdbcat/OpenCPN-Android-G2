@@ -1180,7 +1180,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostEnvironmaent.getDeviceInfo();
+            return app.getHostEnvironment().getDeviceInfo();
         } catch(Throwable t) {
             Log.e("LegacyJNI", "getDeviceInfo failed", t);
             return "NOK";
@@ -1195,7 +1195,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostEnvironmaent.getDisplayMetrics();
+            return app.getHostEnvironment().getDisplayMetrics();
         } catch(Throwable t) {
             Log.e("LegacyJNI", "getDisplayMetrics failed", t);
             return "NOK";
@@ -1243,7 +1243,7 @@ public class QtActivity extends Activity
                Log.e("LegacyJNI", "AppController null");
                return "NOK";
            }
-           return app.hostEnvironmaent.getLocalizedDateTime(format, epoch_seconds);
+           return app.getHostEnvironment().getLocalizedDateTime(format, epoch_seconds);
           } catch(Throwable t) {
            Log.e("LegacyJNI", "getLocalizedDateTime failed", t);
            return "NOK";
@@ -1259,7 +1259,7 @@ public class QtActivity extends Activity
                 Log.e("LegacyJNI", "AppController null");
                 return "NOK";
             }
-            return app.hostEnvironmaent.doGRIBActivity(json) ;
+            return app.getHostEnvironment().doGRIBActivity(json) ;
         } catch(Throwable t) {
             Log.e("LegacyJNI", "doGRIBActivity failed", t);
             return "NOK";
