@@ -102,6 +102,7 @@ public class HostEnvironment {
     private final OCPNConnectivityManager connectivityManager;
     private final NativeBridgeManager nb;
     private final AppController ac;
+    private final MenuController mc;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
@@ -145,13 +146,14 @@ public class HostEnvironment {
         int right;
     }
 
-    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb, AppController _ac) {
+    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb, AppController _ac, MenuController _mc) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
         this.connectivityManager = cm;
         this.nb = nb;
         this.ac = _ac;
+        this.mc = _mc;
     }
 
 
@@ -247,7 +249,7 @@ public class HostEnvironment {
  */
     }
 
-    private void scheduleLayoutUpdate() {
+    public void scheduleLayoutUpdate() {
         if (m_layoutUpdatePending)
             return;
 
@@ -258,31 +260,7 @@ public class HostEnvironment {
 
         ac.m_container.post(() -> {
             m_layoutUpdatePending = false;
-
-            int qtWidth = ac.m_container.getWidth();
-            int qtHeight = ac.m_container.getHeight();
-
             nativeLib.postJsonEvent(JSONHelpers.makeEvent(0,"Resize_Frame_on_insets"));
-/*
-            Log.d("OpenCPN", "filler visibility=" +
-                    ac.m_statusBarFiller.getVisibility());
-
-            Log.d("OpenCPN", "container: "
-                    + ac.m_container.getTop() + ".."
-                    + ac.m_container.getBottom()
-                    + " h=" + ac.m_container.getHeight());
-
-            Log.d("OpenCPN", "toolbar: "
-                    + ac.m_toolbarOverlay.getTop() + ".."
-                    + ac.m_toolbarOverlay.getBottom()
-                    + " h=" + ac.m_toolbarOverlay.getHeight());
-
-            Log.d("OpenCPN", "qt: "
-                    + ac.m_qtView.getTop() + ".."
-                    + ac.m_qtView.getBottom()
-                    + " h=" + ac.m_qtView.getHeight());
-
- */
         });
     }
 
@@ -1627,6 +1605,22 @@ public class HostEnvironment {
 
         return "";
     }
+
+    public void setUIScale(float scale) {
+        activity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (null != mc) {
+                    mc.setScale(scale);
+
+                    ViewGroup root = activity.findViewById(android.R.id.content);
+                    ac.rebuildHybridLayout(root);
+                    scheduleLayoutUpdate();
+                }
+            }
+        });
+    }
+
 
     public String doColorPickerDialog(final int initialColor) {
         m_ColorDialogDone = false;

@@ -69,9 +69,6 @@ public class AppController {
         preferences = new PreferencesManager(activity);
         connectivityHelper = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
-
-        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge, this);
-
         usb = new UsbController();
 
         downloadManager = new DownloadManager();
@@ -87,6 +84,8 @@ public class AppController {
         toolbarController = new ToolbarController(activity, menuController);
 
         androidBridge = new AndroidBridge(activity);
+
+        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge, this, menuController);
 
         // Initialize bridge once
         androidBridge.initialize(
@@ -186,40 +185,59 @@ public class AppController {
     // ---------------------------------------------------
 
 
-    public void setupHybridLayout(ViewGroup root) {
-        try {
 
-            View qtView = root.getChildAt(0);
-            m_qtView = qtView;
+    public void rebuildHybridLayout(ViewGroup root) {
+        try {
+            View qtView = m_qtView;
 
             if (qtView == null) {
-                Log.e("OpenCPN", "Qt view not found");
-                return;
+                // Initial setup: Qt view is currently the first child of root.
+                qtView = root.getChildAt(0);
+
+                if (qtView == null) {
+                    Log.e("OpenCPN", "Qt view not found");
+                    return;
+                }
+
+                m_qtView = qtView;
             }
 
-            root.removeAllViews();
+            // If the hybrid layout already exists, detach the Qt view
+            // before removing the old container.  A View cannot be added
+            // to a new parent while it still has the old parent.
+            if (m_container != null) {
+                m_container.removeView(qtView);
+                root.removeView(m_container);
 
+                m_container = null;
+                m_toolbarOverlay = null;
+                m_statusBarFiller = null;
+            } else {
+                // Initial setup.  Remove the original Qt view from root.
+                root.removeView(qtView);
+            }
+
+            // Create the Android-side container.
             m_container = new LinearLayout(activity);
             m_container.setOrientation(LinearLayout.VERTICAL);
-
             m_container.setLayoutParams(
                     new FrameLayout.LayoutParams(
                             MATCH_PARENT,
                             MATCH_PARENT));
-
 
             // Reserve space for the Android status bar.
             // This view is outside the Qt/wx coordinate system.
             m_statusBarFiller = new View(activity);
             m_statusBarFiller.setBackgroundColor(Color.BLACK);
 
-            LinearLayout.LayoutParams params =
+            LinearLayout.LayoutParams statusParams =
                     new LinearLayout.LayoutParams(
                             MATCH_PARENT,
-                            hostEnvironmaent.m_insets.top);
+                            getHostEnvironment().m_insets.top);
 
-            m_container.addView(m_statusBarFiller, params);
+            m_container.addView(m_statusBarFiller, statusParams);
 
+            // Create a fresh toolbar using the current scale.
             m_toolbarOverlay =
                     LayoutInflater.from(activity)
                             .inflate(
@@ -227,23 +245,25 @@ public class AppController {
                                     m_container,
                                     false);
 
-;           m_container.addView(m_toolbarOverlay);
+            m_container.addView(m_toolbarOverlay);
+
+            // Reinsert the existing Qt view below the Android toolbar.
             m_container.addView(qtView);
+
+            // Install the new hybrid container.
             root.addView(m_container);
 
-
-            // Height reporting
-
-            // Delegate ALL toolbar behavior
+            // Reconnect toolbar behavior.
             menuController.attachToolbar(m_toolbarOverlay);
             menuController.applyButtonState();
-       } catch (Exception e) {
+
+
+        } catch (Exception e) {
             Log.e("OpenCPN",
                     "Hybrid layout failed",
                     e);
         }
     }
-
 
     public void shutdown() {
         inExit = true;

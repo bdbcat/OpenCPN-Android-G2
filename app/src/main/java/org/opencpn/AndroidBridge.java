@@ -418,6 +418,16 @@ public class AndroidBridge {
                     return result.toString();
                 }
 
+                case "SET_GUI_SCALE_FACTOR": {
+                    double scale = obj.optDouble("scale", 1);
+
+                    hostEnvironment.setUIScale((float)scale);
+
+                    JSONObject result = new JSONObject();
+                    result.put("status", "OK");
+                    result.put("payload", "OK");
+                    return result.toString();
+                }
 
                 case "PLAY_SOUND": {
                     int seq = obj.optInt("seq", -1);

@@ -4,12 +4,16 @@ import static org.opencpn.FileController.OCPN_FILEMANAGER_REQUEST_CODE;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -64,6 +68,20 @@ public class MenuController {
     private boolean m_optionsItemActionEnable;
     private Menu m_menu;
 
+    private float mScale = 1.0f;
+
+    private static final float ICON_SIZE = 32;
+    private static final float ICON_MARGIN_START = 4;
+    private static final float ICON_MARGIN_END = 8;
+
+    private static final float TITLE_SIZE = 18;
+    private static final float TITLE_MARGIN_END = 12;
+
+    private static final float BUTTON_SIZE = 52;
+    private static final float BUTTON_PADDING = 4;
+    private static final float BUTTON_MARGIN = 2;
+    private int nIcons;
+
     class MenuState {
         boolean trackActive;
         int followState;
@@ -115,8 +133,12 @@ public class MenuController {
         return "OK";
     }
 
-    public void applyOverflowLayout(int nIxons){
-
+    public void applyOverflowLayout(){
+        if(nIcons < 3) {
+            trackButton.setVisibility(View.GONE);
+         } else {
+            trackButton.setVisibility(View.VISIBLE);
+         }
     }
 
     public void attachToolbar(View toolbarOverlay) {
@@ -134,8 +156,8 @@ public class MenuController {
         trackButton =
                 toolbarOverlay.findViewById(R.id.btn_track);
 
-        //overflowButton =
-        //        toolbarOverlay.findViewById(R.id.btn_overflow);
+        overflowButton =
+                toolbarOverlay.findViewById(R.id.btn_overflow);
 
         ImageButton overflow = toolbarOverlay.findViewById(R.id.btn_overflow);
         overflow.setOnClickListener(v -> showOverflow(v));
@@ -153,6 +175,7 @@ public class MenuController {
         rmd.setOnClickListener(v -> onRMDPressed());
 
         toolbarOverlay.post(this::recomputeToolbarLayout);
+        setScale(mScale);;
     }
 
     private void recomputeToolbarLayout() {
@@ -163,6 +186,7 @@ public class MenuController {
         ListPopupWindow appIcon;
 
         ImageButton overflowButton =  toolbarOverlay.findViewById(R.id.btn_overflow);
+        ImageButton toolButton =  toolbarOverlay.findViewById(R.id.btn_follow);
         TextView appTitle =  toolbarOverlay.findViewById(R.id.app_title);
 
         int overflowWidth =
@@ -170,16 +194,14 @@ public class MenuController {
         int leftWidth = overflowButton.getWidth()
                 + appTitle.getWidth();
 
-        int iconWidth = overflowWidth;
+        int iconWidth = toolButton.getWidth();
         int available =
                 totalWidth
                         - leftWidth
                         - overflowWidth;
-        int nIcons =
-                available / iconWidth;
-        Log.i("MENU",
-                "Available icons = " + nIcons);
-        applyOverflowLayout(nIcons);
+        nIcons =  available / iconWidth;
+        Log.i("MENU","Available icons = " + nIcons);
+        applyOverflowLayout();
     }
 
     void onFollowPressed() {
@@ -225,6 +247,10 @@ public class MenuController {
         int id = item.getItemId();
 
         switch (item.getItemId()) {
+            case R.id.ocpn_action_track_toggle:
+                nativeLib.invokeMenuItem(OCPN_ACTION_TRACK_TOGGLE);
+                return true;
+
             case R.id.ocpn_action_createroute:
                 nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
                 return true;
@@ -347,14 +373,17 @@ public class MenuController {
 
                 MenuItem itemSendEmailActive = menu.findItem(R.id.ocpn_action_email);
                 itemSendEmailActive.setVisible(false);
-            }
-        });
 
+                // Set visibility of "track toggle" based on number of tool icons shown
+                MenuItem itemTrackToggle = menu.findItem(R.id.ocpn_action_track_toggle);
+                if (null != itemTrackToggle)
+                    itemTrackToggle.setVisible(nIcons == 2);
+           }
+        });
     }
 
     private void setToolbarButtonVisible(int id, boolean visible)
     {
-
         View v =  app.getToolbarOverlay().findViewById(id);
 
         if (v != null) {
@@ -363,4 +392,44 @@ public class MenuController {
         }
     }
 
+    //  Menu scaling support
+    public void setScale(float scale) {
+        if (scale < 1) scale = 1;   // Clamp, no downsize allowed
+
+        mScale = scale;
+        scaleButton(followButton);
+        scaleButton(rmdButton);
+        scaleButton(trackButton);
+        scaleButton(overflowButton);
+
+        toolbarOverlay.post(this::recomputeToolbarLayout);
+    }
+
+    private int scaledDp(float value) {
+        return Math.round(value * mScale *
+                activity.getResources().getDisplayMetrics().density);
+    }
+
+    private void scaleButton(ImageButton button) {
+        ViewGroup.LayoutParams raw = button.getLayoutParams();
+
+        if (raw instanceof LinearLayout.LayoutParams) {
+            LinearLayout.LayoutParams lp =
+                    (LinearLayout.LayoutParams) raw;
+
+            lp.width = scaledDp(BUTTON_SIZE);
+            lp.height = scaledDp(BUTTON_SIZE);
+            lp.leftMargin = scaledDp(BUTTON_MARGIN);
+            lp.rightMargin = scaledDp(BUTTON_MARGIN
+            );
+            button.setLayoutParams(lp);
+
+            button.setPadding(
+                    scaledDp(BUTTON_PADDING),
+                    scaledDp(BUTTON_PADDING),
+                    scaledDp(BUTTON_PADDING),
+                    scaledDp(BUTTON_PADDING));
+
+        }
+    }
 }

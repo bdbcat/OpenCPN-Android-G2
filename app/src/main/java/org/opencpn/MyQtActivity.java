@@ -205,7 +205,7 @@ public class MyQtActivity extends QtActivity {
         super.onPostCreate(savedInstanceState);
 
         ViewGroup root = findViewById(android.R.id.content);
-        root.post(() -> app.setupHybridLayout(root));
+        root.post(() -> app.rebuildHybridLayout(root));
         app.getHostEnvironment().setupEdgeToEdge();
     }
 
