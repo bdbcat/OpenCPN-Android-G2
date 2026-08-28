@@ -24,15 +24,7 @@ public class ConnectivityHelper {
 
     public void init() {
         wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-
-
-        // TODO acquire multicast lock if needed
-
-        // Establish GPS Service and listeners
-
-
-
-
+        connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
     }
 
     public String getIpAddress() {

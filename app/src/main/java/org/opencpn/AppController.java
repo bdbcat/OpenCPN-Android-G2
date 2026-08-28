@@ -69,6 +69,7 @@ public class AppController {
         preferences = new PreferencesManager(activity);
         connectivityHelper = new ConnectivityHelper(activity);
         connectivityManager = new OCPNConnectivityManager(activity, nativeLib);
+
         usb = new UsbController();
 
         downloadManager = new DownloadManager();
