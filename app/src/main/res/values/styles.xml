@@ -16,23 +16,36 @@
     <item name="windowNoTitle">true</item>
 </style>
 
-    <!-- Change Overflow Menu ListView Divider Property -->
-<style name="PopupMenuListView" parent="@android:style/Widget.Holo.ListView.DropDown">
-        <item name="android:divider">#dddddd</item>
-        <item name="android:dividerHeight">1dp</item>
-</style>
 
 <style name="MyThemeNew"
     parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+    <!-- OpenCPN-specific overrides -->
+
+    <!-- The private "actionBat" overflow menu -->
+    <item name="android:popupMenuStyle">@style/OpenCPNPopupMenu</item>
+
 </style>
 
 
-<style name="NoActionBartest" parent="@android:style/Theme.Holo.NoActionBar">
-        <!-- Inherits the Holo theme with no action bar; no other styles needed. -->
- </style>
+
+    <style name="OpenCPNPopupTheme">
+        <item name="android:popupMenuStyle">@style/OpenCPNPopupMenu</item>
+        <item name="android:colorBackground">#000000</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="android:dropDownListViewStyle">@style/PopupMenuListView</item>
+    </style>
 
 
+    <style name="OpenCPNPopupMenu">
+        <item name="android:popupBackground">#000000</item>
+    </style>
 
+    <!-- Change Overflow Menu ListView Divider Property -->
+    <style name="PopupMenuListView" parent="@android:style/Widget.Holo.ListView.DropDown">
+        <item name="android:divider">#dddddd</item>
+        <item name="android:dividerHeight">1dp</item>
+    </style>
 
 
     <style name="CustomAlertDialogStyle">

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -226,8 +227,11 @@ public class MenuController {
         if (!m_optionsItemActionEnable)          // option items may be disabled by core
             return;
 
+         ContextThemeWrapper popupContext =
+                new ContextThemeWrapper(activity, R.style.OpenCPNPopupTheme);
+
         PopupMenu popup =
-                new PopupMenu(activity, anchor);
+                new PopupMenu(popupContext, anchor);
 
         popup.getMenuInflater().inflate(
                 R.menu.popup_menu,
