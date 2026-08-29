@@ -11,6 +11,7 @@
         <item>@string/ocpn_grib_model_array_item_xygrib_arpege</item>
         <item>@string/ocpn_grib_model_array_item_xygrib_arpege_hd</item>
         <item>@string/ocpn_grib_model_array_item_xygrib_arome</item>
+        <item>@string/ocpn_grib_model_array_item_xygrib_harmonie_nl</item>
     </string-array>
 
     <string-array name="GRIB_model_ListValues">
@@ -22,6 +23,7 @@
         <item>ARPEGE</item>
         <item>ARPEGE_HD</item>
         <item>AROME</item>
+        <item>HARMONIE</item>
     </string-array>
 
     <string-array name="GRIB_timestep_ListArray">
@@ -48,6 +50,7 @@
         <item>@string/ocpn_grib_time_array_item_6</item>
         <item>@string/ocpn_grib_time_array_item_7</item>
     </string-array>
+
     <string-array name="GRIB_days_ListValues">
         <item>1</item>
         <item>2</item>
@@ -57,6 +60,39 @@
         <item>6</item>
         <item>7</item>
     </string-array>
+
+    <string-array name="GRIB_region_ListArray">
+        <item>@string/ocpn_grib_region_array_item_1</item>
+        <item>@string/ocpn_grib_region_array_item_2</item>
+        <item>@string/ocpn_grib_region_array_item_3</item>
+        <item>@string/ocpn_grib_region_array_item_4</item>
+        <item>@string/ocpn_grib_region_array_item_5</item>
+        <item>@string/ocpn_grib_region_array_item_6</item>
+        <item>@string/ocpn_grib_region_array_item_7</item>
+        <item>@string/ocpn_grib_region_array_item_8</item>
+    </string-array>
+
+    <string-array name="GRIB_region_ListValues">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+    </string-array>
+
+    <string-array name="GRIB_harmonie_data_ListArray">
+        <item>@string/ocpn_grib_data_array_item_1</item>
+        <item>@string/ocpn_grib_data_array_item_2</item>
+    </string-array>
+
+    <string-array name="GRIB_harmonie_data_ListValues">
+        <item>1</item>
+        <item>2</item>
+      </string-array>
+
 
     <string-array name="GRIBSpeedUnits" >
         <item>@string/ocpn_grib_speedunits_array_item_knots</item>

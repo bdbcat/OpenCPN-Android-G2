@@ -175,7 +175,8 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
     public ListPreference mGRIB_modelPreference;
     public ListPreference mGRIB_TimestepPreference;
     public ListPreference mGRIB_DaysPreference;
-
+    public ListPreference mGRIB_RegionPreference;
+    public ListPreference mGRIB_HarmonieDataPreference;
     public CheckBoxPreference mGRIB_WavesPreference;
 
     public PreferenceCategory prefCatSea;
@@ -325,6 +326,19 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
             mGRIB_DaysPreference.setSummary(ts + " ... " + pts);
         }
 
+        mGRIB_RegionPreference = (ListPreference)getPreferenceScreen().findPreference("GRIB_prefs_region");
+        if(null != mGRIB_RegionPreference){
+            String ts = getResources().getString(R.string.ocpn_grib_download_summary_region);
+            String pts = mGRIB_RegionPreference.getEntry().toString();
+            mGRIB_RegionPreference.setSummary(ts + " ... " + pts);
+        }
+
+        mGRIB_HarmonieDataPreference = (ListPreference)getPreferenceScreen().findPreference("GRIB_prefs_harmonie_data");
+        if(null != mGRIB_HarmonieDataPreference){
+            String ts = getResources().getString(R.string.ocpn_grib_download_summary_harmonie_data);
+            String pts = mGRIB_HarmonieDataPreference.getEntry().toString();
+            mGRIB_HarmonieDataPreference.setSummary(ts + " ... " + pts);
+        }
 
         PreferenceScreen screen = getPreferenceScreen();
         prefCatSea= (PreferenceCategory)findPreference("GRIB_prefcat_sea");
@@ -372,7 +386,24 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
                      PreparePreferenceScreen();
                  }
              }
-         }
+
+             if (key.equals("GRIB_prefs_region")) {
+                 if(null != mGRIB_RegionPreference){
+                     String ts = getResources().getString(R.string.ocpn_grib_download_summary_region);
+                     String pts = mGRIB_RegionPreference.getEntry().toString();
+                     mGRIB_RegionPreference.setSummary(ts + " ... " + pts);
+                 }
+             }
+
+               if (key.equals("GRIB_prefs_harmonie_data")) {
+                   if(null != mGRIB_HarmonieDataPreference){
+                       String ts = getResources().getString(R.string.ocpn_grib_download_summary_harmonie_data);
+                       String pts = mGRIB_HarmonieDataPreference.getEntry().toString();
+                       mGRIB_HarmonieDataPreference.setSummary(ts + " ... " + pts);
+                   }
+               }
+
+           }
          };
 
          getPreferenceManager().getSharedPreferences().registerOnSharedPreferenceChangeListener(m_listener);
@@ -402,25 +433,47 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
             screen.addPreference(prefCatGeneral);
             screen.addPreference(prefCatSea);
             screen.addPreference(prefCatWaves);
+            screen.addPreference(mGRIB_DaysPreference);
+            screen.removePreference(mGRIB_RegionPreference);
+            screen.removePreference(mGRIB_HarmonieDataPreference);
         }
         else if(model.contains("ECMWF")){
             screen.removePreference(prefCatSea);
             screen.removePreference(prefCatWaves);
             screen.removePreference(prefCatGeneral);
             screen.removePreference(prefCatTimeStep);
+            screen.addPreference(mGRIB_DaysPreference);
+            screen.removePreference(mGRIB_RegionPreference);
+            screen.removePreference(mGRIB_HarmonieDataPreference);
         }
         else if(model.contains("Arpege")){
             screen.addPreference(prefCatSea);
             screen.removePreference(prefCatWaves);
             screen.addPreference(prefCatGeneral);
+            screen.addPreference(mGRIB_DaysPreference);
             screen.addPreference(prefCatTimeStep);
+            screen.removePreference(mGRIB_HarmonieDataPreference);
         }
         else if(model.contains("Arome")){
             screen.addPreference(prefCatSea);
             screen.removePreference(prefCatWaves);
             screen.addPreference(prefCatGeneral);
             screen.addPreference(prefCatTimeStep);
+            screen.addPreference(mGRIB_DaysPreference);
+            screen.removePreference(mGRIB_RegionPreference);
+            screen.removePreference(mGRIB_HarmonieDataPreference);
         }
+        else if(model.contains("Harmonie")){
+            screen.removePreference(prefCatSea);
+            screen.removePreference(prefCatWaves);
+            screen.removePreference(prefCatGeneral);
+            screen.removePreference(prefCatTimeStep);
+            screen.removePreference(mGRIB_DaysPreference);
+            screen.addPreference(mGRIB_RegionPreference);
+            screen.addPreference(mGRIB_HarmonieDataPreference);
+        }
+
+
     }
 
     public class taskHandler extends Handler {
@@ -513,8 +566,6 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
 
 
     private String downloadECMWFDirect(){
-
-
         //  Get some parameters from the Preferences.
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -635,6 +686,60 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
         return "OK";
     }
 
+    private String downloadHARMONIEDirect(){
+        //  Get some parameters from the Preferences.
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Craft he url
+        String url = "https://www.euroszeilen.utwente.nl/weer/grib/download/harmonie_xy";
+
+        //Add the region
+        String region = mGRIB_RegionPreference.getEntry().toString();
+
+        if(region.equals("IJsselmeer")) url += "_ijmg";
+        if(region.equals("Waddenzee")) url += "_wad";
+        if(region.equals("Zeeland")) url += "_zld";
+        if(region.equals("Nederland")) url += "_nl";
+        if(region.equals("Noordzee")) url += "_nz";
+        if(region.equals("Duitse Bocht")) url += "_db";
+        if(region.equals("Dover")) url += "_dov";
+
+        //  Add the data coverage
+        String dataCover = mGRIB_HarmonieDataPreference.getEntry().toString();
+        if(dataCover.equals("Wind")) url += "_wind";
+
+        // Finalize the url
+        url += ".grb";
+
+
+
+        // Make the destination file name
+        String tdest_file = ("gribs/ocpn_") + "harmonie";
+        tdest_file += "_" + region;
+        tdest_file += "_" + dataCover + ".grb";
+
+
+        // File will end up in public downloads directory.
+        File trootDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File tdFile = new File(trootDir.getAbsolutePath() , tdest_file);
+        String dest_file = tdFile.getAbsolutePath();
+
+        Log.i("OpenCPN", "dest_file: " + dest_file);
+
+        // persist the target file name
+        Editor editor = preferences.edit();
+        editor.putString("GRIB_dest_file", dest_file);
+        editor.apply();
+
+
+        Intent intent = new Intent(this, downloadGRIBSingle.class);
+        intent.putExtra("URL",url);
+        intent.putExtra("GRIB_dest_file",dest_file);
+        startActivityForResult(intent, OCPN_DOWNLOAD_SINGLE_GRIB_REQUEST_CODE );
+
+        return "OK";
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i("GRIB", "onActivityResult");
@@ -646,7 +751,7 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
         }
     }
 
-            private String downloadXyGribDirect() {
+    private String downloadXyGribDirect() {
         //  Get some parameters from the Preferences.
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -880,6 +985,9 @@ public class OCPNGRIBDownloadPrefActivity extends PreferenceActivity {
         }
         else if(model.contains("AROME")){
             downloadXyGribDirect();
+        }
+        else if(model.contains("HARMONIE")){
+            downloadHARMONIEDirect();
         }
     }
 

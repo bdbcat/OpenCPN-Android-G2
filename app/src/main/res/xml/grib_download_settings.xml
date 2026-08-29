@@ -19,6 +19,23 @@
         android:entries="@array/GRIB_days_ListArray"
         android:entryValues="@array/GRIB_days_ListValues" />
 
+    <ListPreference
+        android:key="GRIB_prefs_region"
+        android:title="@string/ocpn_grib_download_region"
+        android:summary="@string/ocpn_grib_download_summary_region"
+        android:defaultValue="2"
+        android:entries="@array/GRIB_region_ListArray"
+        android:entryValues="@array/GRIB_region_ListValues" />
+
+    <ListPreference
+        android:key="GRIB_prefs_harmonie_data"
+        android:title="@string/ocpn_grib_download_harmonie_data"
+        android:summary="@string/ocpn_grib_download_summary_harmonie_data"
+        android:defaultValue="1"
+        android:entries="@array/GRIB_harmonie_data_ListArray"
+        android:entryValues="@array/GRIB_harmonie_data_ListValues" />
+
+
     <PreferenceCategory
         android:title="Time Step"
         android:key="GRIB_prefcat_timestep">

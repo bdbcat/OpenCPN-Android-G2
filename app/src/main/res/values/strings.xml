@@ -185,6 +185,8 @@
     <string name="ocpn_grib_download_summary_waves">Request Waves data</string>
     <string name="ocpn_grib_download_summary_current">Request Current data</string>
     <string name="ocpn_grib_download_summary_seatemp">Request Sea Temperature data</string>
+    <string name="ocpn_grib_download_region"><b>Region</b></string>
+    <string name="ocpn_grib_download_summary_region">Request region</string>
 
    <string name="ocpn_grib_ref_tz">GRIB Reference Timezone</string>
 
@@ -304,6 +306,20 @@
     <string name="ocpn_grib_time_array_item_6">6 days</string>
     <string name="ocpn_grib_time_array_item_7">7 days</string>
 
+    <string name="ocpn_grib_region_array_item_1">IJsselmeer</string>
+    <string name="ocpn_grib_region_array_item_2">Waddenzee</string>
+    <string name="ocpn_grib_region_array_item_3">Zeeland</string>
+    <string name="ocpn_grib_region_array_item_4">Nederland</string>
+    <string name="ocpn_grib_region_array_item_5">Noordzee</string>
+    <string name="ocpn_grib_region_array_item_6">Duitse Bocht</string>
+    <string name="ocpn_grib_region_array_item_7">Dover</string>
+    <string name="ocpn_grib_region_array_item_8">Modelgebied</string>
+
+    <string name="ocpn_grib_download_harmonie_data">Data</string>
+    <string name="ocpn_grib_download_summary_harmonie_data">Data in GRIB</string>
+    <string name="ocpn_grib_data_array_item_1">All</string>
+    <string name="ocpn_grib_data_array_item_2">Wind</string>
+
     <string name="ocpn_grib_speedunits_array_item_knots">Knots</string>
     <string name="ocpn_grib_speedunits_array_item_ms">m/s</string>
     <string name="ocpn_grib_speedunits_array_item_mph">mph</string>
@@ -383,5 +399,6 @@
     <string name="ocpn_grib_model_array_item_xygrib_arpege">Arpege 0.50\u00B0</string>
     <string name="ocpn_grib_model_array_item_xygrib_arpege_hd">Arpege-HD 0.06\u00B0</string>
     <string name="ocpn_grib_model_array_item_xygrib_arome">Arome 0.025\u00B0</string>
+    <string name="ocpn_grib_model_array_item_xygrib_harmonie_nl">Harmonie (NL)</string>
 
 </resources>
