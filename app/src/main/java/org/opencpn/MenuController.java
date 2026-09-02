@@ -21,7 +21,6 @@ import android.widget.TextView;
 import androidx.appcompat.widget.ListPopupWindow;
 
 import org.opencpn.opencpn.R;
-import org.qtproject.qt5.android.bindings.QtActivity;
 
 import java.io.File;
 
@@ -44,7 +43,6 @@ public class MenuController {
     private final static int OCPN_ACTION_ENCLIGHTS_TOGGLE = 0x100d;
 
     private final Activity activity;
-    private final OCPNNativeLib nativeLib;
     private final AppController app;
     private MenuItem itemRouteAnnunciator;
     private MenuItem itemRouteMenuItem;
@@ -82,6 +80,8 @@ public class MenuController {
     private static final float BUTTON_PADDING = 4;
     private static final float BUTTON_MARGIN = 2;
     private int nIcons;
+    private NativeBridgeManager nativeBridge;
+    private JSONHelpers JsonHelpers;
 
     class MenuState {
         boolean trackActive;
@@ -92,10 +92,10 @@ public class MenuController {
     private MenuState menuState;
 
 
-    public MenuController(Activity activity, OCPNNativeLib nativeLib, AppController app) {
+    public MenuController(Activity activity, AppController app, NativeBridgeManager _nb) {
         this.activity = activity;
-        this.nativeLib = nativeLib;
         this.app = app;
+        this.nativeBridge = _nb;
     
         menuState = new MenuState();
         menuState.trackActive = false;
@@ -206,19 +206,24 @@ public class MenuController {
     }
 
     void onFollowPressed() {
-        nativeLib.invokeMenuItem(OCPN_ACTION_FOLLOW);
+        nativeBridge.postJsonEvent(
+                JsonHelpers.makeEvent(0, "menuAction", "action", "action_follow"));
     }
 
     void onRMDPressed() {
-        nativeLib.invokeMenuItem(OCPN_ACTION_RMD);
+        nativeBridge.postJsonEvent(
+                JsonHelpers.makeEvent(0, "menuAction", "action", "action_rmd"));
     }
 
     void onRoutePressed() {
-        nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
+        nativeBridge.postJsonEvent(
+                JsonHelpers.makeEvent(0, "menuAction", "action", "route_create"));
     }
 
     void onTrackPressed() {
-        nativeLib.invokeMenuItem(OCPN_ACTION_TRACK_TOGGLE);
+        //nativeLib.invokeMenuItem(OCPN_ACTION_TRACK_TOGGLE);
+        nativeBridge.postJsonEvent(
+                JsonHelpers.makeEvent(0, "menuAction", "action", "track_toggle"));
     }
 
     private void showOverflow(View anchor) {
@@ -247,44 +252,57 @@ public class MenuController {
     }
 
     public boolean handle(MenuItem item) {
-
         int id = item.getItemId();
 
         switch (item.getItemId()) {
             case R.id.ocpn_action_track_toggle:
-                nativeLib.invokeMenuItem(OCPN_ACTION_TRACK_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "track_toggle"));
                 return true;
 
             case R.id.ocpn_action_createroute:
-                nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "route_create"));
                 return true;
 
-            case R.id.ocpn_route_create_active:             // exiting Route Create mode
-                nativeLib.invokeMenuItem(OCPN_ACTION_ROUTE);
+            case R.id.ocpn_route_create_active:
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "route_finish"));
                 return true;
 
             case R.id.ocpn_action_encText:
-                nativeLib.invokeMenuItem(OCPN_ACTION_ENCTEXT_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "enc_text_toggle"));
                 return true;
 
             case R.id.ocpn_action_encSoundings:
-                nativeLib.invokeMenuItem(OCPN_ACTION_ENCSOUNDINGS_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "enc_soundings_toggle"));
                 return true;
 
             case R.id.ocpn_action_encLights:
-                nativeLib.invokeMenuItem(OCPN_ACTION_ENCLIGHTS_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "enc_lights_toggle"));
                 return true;
 
             case R.id.ocpn_action_tides:
-                nativeLib.invokeMenuItem(OCPN_ACTION_TIDES_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "tides_toggle"));
                 return true;
 
             case R.id.ocpn_action_currents:
-                nativeLib.invokeMenuItem(OCPN_ACTION_CURRENTS_TOGGLE);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "currents_toggle"));
                 return true;
 
             case R.id.ocpn_action_mob:
-                nativeLib.invokeMenuItem(OCPN_ACTION_MOB);
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "MOB_activate"));
+                return true;
+
+            case R.id.ocpn_action_settings_basic:
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "menuAction", "action", "Settings_basic"));
                 return true;
 
             case R.id.ocpn_action_googlemaps:
@@ -300,10 +318,6 @@ public class MenuController {
 
             case R.id.ocpn_action_toggle_fullscreen:
                 app.getHostEnvironment().toggleFullscreen();
-                return true;
-
-            case R.id.ocpn_action_settings_basic:
-                nativeLib.invokeMenuItem(OCPN_ACTION_SETTINGS_BASIC);
                 return true;
 
             default:

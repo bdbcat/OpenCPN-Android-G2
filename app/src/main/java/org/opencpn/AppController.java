@@ -81,7 +81,7 @@ public class AppController {
         );
 
 
-        menuController = new MenuController(activity, nativeLib, this);
+        menuController = new MenuController(activity, this, nativeBridge);
         toolbarController = new ToolbarController(activity, menuController);
 
         androidBridge = new AndroidBridge(activity);
