@@ -81,6 +81,7 @@ public class OCPNConnectivityManager {
     private String m_scannedSerial;
     private boolean g_postActive;
     private String g_postResult;
+    private NativeBridgeManager nativeBridge;
 
 
     public  OCPNConnectivityManager(Activity avtivity, OCPNNativeLib nl) {
@@ -88,9 +89,9 @@ public class OCPNConnectivityManager {
         nativeLib = nl;
     }
 
-    public void init(Activity activity) {
+    public void init(Activity activity, NativeBridgeManager _nbm) {
         this.activity = activity;
-
+        this.nativeBridge = _nbm;
         connectivityManager = (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
         registerNetworkCallback();
 

@@ -9,6 +9,12 @@ import org.json.JSONObject;
 
 public class NativeBridgeManager {
 
+    private static NativeBridgeManager ourInstance = new NativeBridgeManager();
+
+    public static NativeBridgeManager getInstance() {
+        return ourInstance;
+    }
+
     enum LifecycleState {
         CREATED,
         STARTED,
@@ -17,11 +23,11 @@ public class NativeBridgeManager {
         STOPPED,
         DESTROYED
     }
-    private final OCPNNativeLib nativeLib;
+    private static OCPNNativeLib nativeLib;
 
-    private boolean qtReady = false;
+    private static boolean qtReady = false;
 
-    private final List<Runnable> pendingCalls = new ArrayList<>();
+    private static final List<Runnable> pendingCalls = new ArrayList<>();
 
     private LifecycleState lastState = LifecycleState.CREATED;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -31,7 +37,7 @@ public class NativeBridgeManager {
     }
 
 
-    public void postJsonEvent(String payload) {
+    public static void postJsonEvent(String payload) {
         runOrQueue(() -> nativeLib.postJsonEvent(payload));
     }
 
@@ -68,7 +74,7 @@ public class NativeBridgeManager {
 
     // --- Core logic ---
 
-    private void runOrQueue(Runnable r) {
+    private static void runOrQueue(Runnable r) {
         if (qtReady) {
             r.run();
         } else {
@@ -93,24 +99,23 @@ public class NativeBridgeManager {
     private void syncToLatestState() {
         switch (lastState) {
             case RESUMED:
-                //nativeLib.onStart();
-                nativeLib.onResume();
+                postJsonEvent(JSONHelpers.makeEvent(0,"onResume"));
                 break;
 
             case STARTED:
-                nativeLib.onStart();
+                postJsonEvent(JSONHelpers.makeEvent(0,"onStart"));
                 break;
 
             case PAUSED:
-                nativeLib.onPause();
+                postJsonEvent(JSONHelpers.makeEvent(0,"onPause"));
                 break;
 
             case STOPPED:
-                nativeLib.onStop();
+                postJsonEvent(JSONHelpers.makeEvent(0, "onStop"));
                 break;
 
             case DESTROYED:
-                nativeLib.onDestroy();
+                postJsonEvent(JSONHelpers.makeEvent(0,"onDestroy"));
                 break;
 
             default:

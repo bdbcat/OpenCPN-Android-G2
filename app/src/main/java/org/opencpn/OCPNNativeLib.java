@@ -29,18 +29,10 @@ public class OCPNNativeLib {
 
   public native int processNMEA(String nmea_string);
   public native int processBTNMEA(String nmea_string);
-  public native int processNMEAInt(String nmea_string);
+
   public native int processARBNMEA(String NMEA_sentence);
 
   public native int onConfigChange( int orientation );
-
-  public native int onMenuKey();
-
-  public native int onStart();
-  public native int onStop();
-  public native int onPause();
-  public native int onResume();
-  public native int onDestroy();
 
   public native int invokeCmdEventCmdString( int cmd_id, String s);
   public native String getVPCorners();

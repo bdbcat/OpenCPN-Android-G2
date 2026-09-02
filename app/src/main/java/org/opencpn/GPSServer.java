@@ -38,21 +38,18 @@ import com.google.android.gms.location.sample.locationupdatesforegroundservice.L
 import java.lang.reflect.Method;
 import java.util.List;
 import java.lang.Math;
-import java.lang.Iterable;
-import java.util.Iterator;
-
-import org.opencpn.OCPNGpsNmeaListener;
-import org.opencpn.OCPNNativeLib;
-
 
 
 public class GPSServer extends Service implements LocationListener {
+
+    private org.opencpn.JSONHelpers JsonHelpers;
 
     public final static int GPS_OFF = 0;
     public final static int GPS_ON = 1;
     public  final static int GPS_PROVIDER_AVAILABLE = 2;
     public final static int GPS_SHOWPREFERENCES = 3;
     public final static int GPS_STOPSERVICE = 4;
+    private NativeBridgeManager nativeBridge;
 
     private Context mContext;
 
@@ -63,7 +60,6 @@ public class GPSServer extends Service implements LocationListener {
 
     OCPNGpsNmeaListener mNMEAListener;
 
-    OCPNNativeLib mNativeLib;
     MyNMEAMessageListener mNMEAMessageListener;
     MYGpsNmeaListener mGPSNMEAListener;
 
@@ -115,8 +111,8 @@ public class GPSServer extends Service implements LocationListener {
 
     @Override
     public IBinder onBind(Intent intent) {
-        mNativeLib = OCPNNativeLib.getInstance();
         mContext = getApplicationContext();
+        nativeBridge = NativeBridgeManager.getInstance();
         return binder;
     }
 
@@ -253,8 +249,8 @@ public class GPSServer extends Service implements LocationListener {
                 m_watchDog = 0;
             }
 
-            if(null != mNativeLib){
-                mNativeLib.processNMEAInt( filterNMEA );
+            if(null != mNMEAMessageListener){
+                //mNativeLib.processNMEAInt( filterNMEA );
             }
         }
     }
@@ -283,16 +279,13 @@ public class GPSServer extends Service implements LocationListener {
 
                 m_watchDog = 0;
             }
-            if(null != mNativeLib){
-                //Log.i("OpenCPN", "MyNMEAMessageListener: onNMEAMessage : calling mNativeLib.processNMEAInt" );
-                mNativeLib.processNMEAInt( filterNMEA );
+            if(null != mNMEAMessageListener){
+                nativeBridge.postJsonEvent(
+                        JsonHelpers.makeEvent(0, "GPS_server", "sentence", filterNMEA));
+
             }
 
         }
-    }
-
-
-    public GPSServer(Context context, OCPNNativeLib nativelib) {
     }
 
     public String doService( int parm )
@@ -662,11 +655,11 @@ public class GPSServer extends Service implements LocationListener {
         long deltaTime = mLastLocationMillis - mlastNMEAMillis;
         //Log.i("OpenCPN", Long.toString( deltaTime));
         if(deltaTime > 2000){
-            if(null != mNativeLib) {
-                String s = createRMC(location);
-                Log.i("OpenCPN", "ticker: " + s);
-                mNativeLib.processNMEAInt(s);
-            }
+            //if(null != mNativeLib)) {
+            //    String s = createRMC(location);
+            //    Log.i("OpenCPN", "ticker: " + s);
+            //    mNativeLib.processNMEAInt(s);
+            //}
         }
     }
 

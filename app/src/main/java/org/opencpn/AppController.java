@@ -63,7 +63,7 @@ public class AppController {
     // ---------------------------------------------------
 
     public void init(Bundle savedInstanceState) {
-        nativeBridge = new NativeBridgeManager();
+        nativeBridge = NativeBridgeManager.getInstance();
         nativeLib = OCPNNativeLib.getInstance();
 
         preferences = new PreferencesManager(activity);
@@ -105,7 +105,7 @@ public class AppController {
         OpenCPNBridge.getInstance(activity).initFilesystem();
 
         // --- Android Location services ---
-        connectivityManager.init(activity);
+        connectivityManager.init(activity, nativeBridge);
         connectivityHelper.init();
 
         downloadManager.init(activity, nativeLib);
