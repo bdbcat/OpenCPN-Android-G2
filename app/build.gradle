@@ -428,24 +428,16 @@ dependencies {
     //}
 
     task copyQTLibs_arm64_v8a(type: Copy) {
-        ///home/dsr/Qt/5.15.16-android-arm64/lib/libQt5Core_arm64-v8a.so
-        ///home/dsr/Qt/5.15.16-android-arm64/lib/libQt5Gui_arm64-v8a.so
-        from "${Qt_Base}/lib/libQt5Core_arm64-v8a.so"
-        from "${Qt_Base}/lib/libQt5Gui_arm64-v8a.so"
-        from "${Qt_Base}/lib/libQt5OpenGL_arm64-v8a.so"
-        from "${Qt_Base}/lib/libQt5Test_arm64-v8a.so"
-        from "${Qt_Base}/lib/libQt5Widgets_arm64-v8a.so"
-        from "${Qt_Base}/lib/libQt5AndroidExtras_arm64-v8a.so"
-        from "${Qt_Base}/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so"
-        from "${Qt_Base}/plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so"
-        //from "${Qt_Base}/${Qt_Build_ARM64}/qtbase/plugins/platforms/android/libqtforandroid.so"
-        //from "${Qt_Base}/${Qt_Build_ARM64}/qtbase/plugins/styles/libqandroidstyle.so"
+        from "${Qt_Base}/lib/libQt5Core.so"
+        from "${Qt_Base}/lib/libQt5Gui.so"
+        from "${Qt_Base}/lib/libQt5OpenGL.so"
+        from "${Qt_Base}/lib/libQt5Widgets.so"
+        from "${Qt_Base}/lib/libQt5AndroidExtras.so"
+        from "${Qt_Base}/plugins/platforms/libplugins_platforms_qtforandroid.so"
+        from "${Qt_Base}/plugins/styles/libplugins_styles_qandroidstyle.so"
 
         into 'src/main/jniLibs/arm64-v8a'
-
-        //rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        //rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
-    }
+     }
 
 
     task copyOCPN_CORE_64(type: Copy) {

@@ -618,8 +618,8 @@ public abstract class QtLoader {
                         }
                     }
 */
-                    libraryList.add(libsDir + "libplugins_platforms_qtforandroid_arm64-v8a.so");
-                    libraryList.add(libsDir + "libplugins_styles_qandroidstyle_arm64-v8a.so");
+                    libraryList.add(libsDir + "libplugins_platforms_qtforandroid.so");
+                    libraryList.add(libsDir + "libplugins_styles_qandroidstyle.so");
 
                     ENVIRONMENT_VARIABLES += "\tQML2_IMPORT_PATH=" + pluginsPrefix + "/qml"
                             + "\tQML_IMPORT_PATH=" + pluginsPrefix + "/imports"
