@@ -45,7 +45,7 @@ public class OCPNNativeLib {
   public native int sendPluginMessage( String iD, String message);
   public native int getTLWCount();
 
-  public native int processSailTimer(double WindAngleMagnetic, double WindSpeedKnots);
+  //public native int processSailTimer(double WindAngleMagnetic, double WindSpeedKnots);
 
   public native int ScheduleCleanExit();
 

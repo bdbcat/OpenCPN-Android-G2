@@ -888,16 +888,8 @@ public class OCPNConnectivityManager {
 
                     final double wsa = windSpeedAvg;
                     final double wda = windDirectionAvg;
-
-                    if (null != nativeLib) {
-                        Thread thread = new Thread() {
-                            @Override
-                            public void run() {
-                                nativeLib.processSailTimer(wda, wsa);
-                            }
-                        };
-                        thread.start();
-                    }
+                    nativeBridge.postJsonEvent(
+                            jsonHelpers.makeEvent(0, "PROCESS_SAILTIMER", "wda", wda, "wsa", wsa));
                 }
             }
         }
