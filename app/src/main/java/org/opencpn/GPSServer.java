@@ -281,7 +281,7 @@ public class GPSServer extends Service implements LocationListener {
             }
             if(null != mNMEAMessageListener){
                 nativeBridge.postJsonEvent(
-                        JsonHelpers.makeEvent(0, "GPS_server", "sentence", filterNMEA));
+                        JsonHelpers.makeEvent(0, "GPS_server_RX", "sentence", filterNMEA));
 
             }
 

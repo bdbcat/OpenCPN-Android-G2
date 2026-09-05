@@ -23,14 +23,14 @@ public class OCPNNativeLib {
   /**
    * Returns Hello World string
    */
-  public native String hello();
+  //public native String hello();
 
-  public native int test();
+  //public native int test();
 
-  public native int processNMEA(String nmea_string);
-  public native int processBTNMEA(String nmea_string);
+  //public native int processNMEA(String nmea_string);
+  //public native int processBTNMEA(String nmea_string);
 
-  public native int processARBNMEA(String NMEA_sentence);
+  //public native int processARBNMEA(String NMEA_sentence);
 
   public native int onConfigChange( int orientation );
 

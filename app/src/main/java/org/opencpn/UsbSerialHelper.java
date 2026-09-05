@@ -74,7 +74,9 @@ public class UsbSerialHelper {
 
     private boolean usbConnected = false;
 
-    private OCPNNativeLib nativeLib = null;
+    private NativeBridgeManager nativeBridge;
+
+    private JSONHelpers jsonHelpers;
 
     private static final String ACTION_USB_PERMISSION =
         "com.android.example.USB_PERMISSION";
@@ -95,8 +97,9 @@ public class UsbSerialHelper {
     }
 
 
-    public void initUSBSerial(Context context){
+    public void initUSBSerial(Context context, NativeBridgeManager _nbm){
         if(null != context){
+            nativeBridge = _nbm;
             mUsbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
             mExecutor = Executors.newSingleThreadExecutor();
 
@@ -117,7 +120,7 @@ public class UsbSerialHelper {
                     ContextCompat.RECEIVER_NOT_EXPORTED);
         }
 
-        nativeLib = OCPNNativeLib.getInstance();
+        //nativeLib = OCPNNativeLib.getInstance();
     }
 
     public void deinitUSBSerial(Context context){
@@ -250,10 +253,12 @@ public class UsbSerialHelper {
                     smsg += "\r\n";
 
                     //                if(DEBUG) Log.d("OpenCPN", "Formatted " + smsg);
-                    if (null != nativeLib) {
-                        nativeLib.processNMEA(smsg);
-                        tmp_vec.clear();
-                    }
+
+                    nativeBridge.postJsonEvent(
+                                jsonHelpers.makeEvent(0, "Serial_RX", "sentence", smsg));
+
+                    tmp_vec.clear();
+
                 }
             }
         }

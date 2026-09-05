@@ -82,7 +82,7 @@ public class OCPNConnectivityManager {
     private boolean g_postActive;
     private String g_postResult;
     private NativeBridgeManager nativeBridge;
-
+    private JSONHelpers jsonHelpers;
 
     public  OCPNConnectivityManager(Activity avtivity, OCPNNativeLib nl) {
         this.activity = activity;
@@ -125,7 +125,7 @@ public class OCPNConnectivityManager {
 
     public void onResume(){
         if (null != uSerialHelper) {
-            uSerialHelper.initUSBSerial(activity);
+            uSerialHelper.initUSBSerial(activity, nativeBridge);
             m_scannedSerial = scanSerialPorts(UsbSerialHelper.SCAN);      // Full scan.
         }
 
@@ -332,7 +332,10 @@ public class OCPNConnectivityManager {
                     public void onDataReceived(byte[] data, String message) {
 //                        Log.i("DEBUGGER_TAG", message);
                         // Do something when data incoming
-                        nativeLib.processBTNMEA(message);
+                        //nativeLib.processBTNMEA(message);
+                        nativeBridge.postJsonEvent(
+                                jsonHelpers.makeEvent(0, "Bluetooth_RX", "sentence", message));
+
 
                     }
                 });
@@ -846,15 +849,8 @@ public class OCPNConnectivityManager {
                         try {
                             String ST_NMEA = decryptIt(value, hash);
                             //Log.i("OpenCPN", ST_NMEA);
-                            if (null != nativeLib) {
-                                Thread thread = new Thread() {
-                                    @Override
-                                    public void run() {
-                                        nativeLib.processARBNMEA(ST_NMEA);
-                                    }
-                                };
-                                thread.start();
-                            }
+                            nativeBridge.postJsonEvent(
+                                            jsonHelpers.makeEvent(0, "Arb_NMEA_RX", "sentence", ST_NMEA));
                         } catch (Exception e) {
                         }
                     }
@@ -864,15 +860,9 @@ public class OCPNConnectivityManager {
                         try {
                             String ST_NMEA = decryptIt(value, hash);
                             //Log.i("OpenCPN", ST_NMEA);
-                            if (null != nativeLib) {
-                                Thread thread = new Thread() {
-                                    @Override
-                                    public void run() {
-                                        nativeLib.processARBNMEA(ST_NMEA);
-                                    }
-                                };
-                                thread.start();
-                            }
+                            nativeBridge.postJsonEvent(
+                                    jsonHelpers.makeEvent(0, "Arb_NMEA_RX", "sentence", ST_NMEA));
+
                         } catch (Exception e) {
                         }
                     }
@@ -882,15 +872,9 @@ public class OCPNConnectivityManager {
                         try {
                             String ST_NMEA = decryptIt(value, hash);
                             //Log.i("OpenCPN", ST_NMEA);
-                            if (null != nativeLib) {
-                                Thread thread = new Thread() {
-                                    @Override
-                                    public void run() {
-                                        nativeLib.processARBNMEA(ST_NMEA);
-                                    }
-                                };
-                                thread.start();
-                            }
+                            nativeBridge.postJsonEvent(
+                                    jsonHelpers.makeEvent(0, "Arb_NMEA_RX", "sentence", ST_NMEA));
+
                         } catch (Exception e) {
                         }
                     }
