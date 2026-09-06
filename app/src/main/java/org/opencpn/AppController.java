@@ -108,7 +108,7 @@ public class AppController {
         connectivityManager.init(activity, nativeBridge);
         connectivityHelper.init();
 
-        downloadManager.init(activity, nativeLib);
+        downloadManager.init(activity, nativeBridge);
 
         usb.initIfAvailable(activity);
 

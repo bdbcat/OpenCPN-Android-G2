@@ -15,16 +15,17 @@ import java.io.File;
 public class DownloadManager implements OCPNResultReceiver.Receiver {
     private Activity activity;
     public OCPNResultReceiver mReceiver;
-    public OCPNNativeLib nativeLib;
 
     private int m_downloadTotal;
     private int m_downloadFilelength;
     private int m_downloadStatus;
     private String m_downloadURL;
+    private NativeBridgeManager nativeBridge;
+    private JSONHelpers JsonhHelpers;
 
-    public void init( Activity act, OCPNNativeLib nl )  {
+    public void init( Activity act, NativeBridgeManager nb )  {
       this.activity = act;
-      nativeLib = nl;
+      nativeBridge = nb;
       mReceiver = new OCPNResultReceiver(new Handler());
       mReceiver.setReceiver(this);
     }
@@ -41,6 +42,7 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
 
     public void onReceiveResult(int resultCode, Bundle resultData) {
         //super.onReceiveResult(resultCode, resultData);
+
         if (resultCode == DownloadService.UPDATE_PROGRESS) {
 
             int progress = resultData.getInt("progress");
@@ -51,7 +53,9 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
 
 //            Log.i("OpenCPN", "UPDATE_PROGRESS " + m_downloadTotal + " " + m_downloadFilelength + " " + progress);
 
-            nativeLib.setDownloadStatus(m_downloadStatus, m_downloadURL);
+            nativeBridge.postJsonEvent(
+                    JsonhHelpers.makeEvent(0, "DOWNLOAD_PROGRESS", "dl_status", m_downloadStatus, "dl_url", m_downloadURL));
+
 
         }
         if (resultCode == DownloadService.DOWNLOAD_DONE) {
@@ -61,7 +65,9 @@ public class DownloadManager implements OCPNResultReceiver.Receiver {
             if (0 == m_downloadTotal)
                 m_downloadStatus = 16;      // STATUS_ERROR
 
-            nativeLib.setDownloadStatus(m_downloadStatus, m_downloadURL);
+            nativeBridge.postJsonEvent(
+                    JsonhHelpers.makeEvent(0, "DOWNLOAD_PROGRESS", "dl_status", m_downloadStatus, "dl_url", m_downloadURL));
+
             Log.i("OpenCPN", "DOWNLOAD_DONE " + m_downloadStatus + " " + m_downloadTotal + " " + m_downloadTotal + " " + m_downloadFilelength);
         }
 
