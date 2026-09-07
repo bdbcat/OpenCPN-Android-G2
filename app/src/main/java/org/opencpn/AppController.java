@@ -86,7 +86,8 @@ public class AppController {
 
         androidBridge = new AndroidBridge(activity);
 
-        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager, nativeBridge, this, menuController);
+        hostEnvironmaent = new HostEnvironment(activity, nativeLib,  connectivityManager,
+                nativeBridge, this, menuController, this.nativeBridge);
 
         // Initialize bridge once
         androidBridge.initialize(

@@ -34,9 +34,9 @@ public class OCPNNativeLib {
 
   public native int onConfigChange( int orientation );
 
-  public native int invokeCmdEventCmdString( int cmd_id, String s);
+  //public native int invokeCmdEventCmdString( int cmd_id, String s);
   //public native String getVPCorners();
-  public native String getVPS();
+  //public native String getVPS();
 
   //public native int setDownloadStatus( int status, String url);
   public native int onMouseWheel(int dir);

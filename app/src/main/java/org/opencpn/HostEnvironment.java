@@ -103,6 +103,7 @@ public class HostEnvironment {
     private final NativeBridgeManager nb;
     private final AppController ac;
     private final MenuController mc;
+    private final NativeBridgeManager nativeBridge;
 
     // state injected from Activity
     private boolean m_fullScreen = false;
@@ -137,6 +138,7 @@ public class HostEnvironment {
     private static final String PREF_UNIQUE_ID = "PREF_UNIQUE_ID";
     private BroadcastReceiver mLocaleChangeReceiver;
     private boolean m_layoutUpdatePending = false;
+    private JSONHelpers jsonhelpers;
 
     // Static nested class
     public static class MyInsets {
@@ -146,7 +148,8 @@ public class HostEnvironment {
         int right;
     }
 
-    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm, NativeBridgeManager nb, AppController _ac, MenuController _mc) {
+    public HostEnvironment(Activity activity, OCPNNativeLib nativeLib, OCPNConnectivityManager cm,
+                           NativeBridgeManager nb, AppController _ac, MenuController _mc, NativeBridgeManager _nbm) {
         this.activity = activity;
         m_filesDir = resolveFilesDir();
         this.nativeLib = nativeLib;
@@ -154,6 +157,7 @@ public class HostEnvironment {
         this.nb = nb;
         this.ac = _ac;
         this.mc = _mc;
+        this.nativeBridge = _nbm;
     }
 
 
@@ -417,8 +421,10 @@ public class HostEnvironment {
             toSet += "_" + country;
 
         Log.i("OpenCPN", "  setAppLocale new language ID is: " + toSet);
-        //TODO  Implement this
+        //TODO  Implement this using ID_CMD_SET_LOCALE
         // nativeLib.invokeCmdEventCmdString( ID_CMD_SET_LOCALE, toSet);
+        //nativeBridge.postJsonEvent(
+        //        jsonhelpers.makeEvent(0, "DOWNLOAD_PROGRESS", "dl_status", m_downloadStatus, "dl_url", m_downloadURL));
 
     }
 
@@ -449,17 +455,10 @@ public class HostEnvironment {
                     throw new RuntimeException(e);
                 }
 
-                nativeLib.invokeCmdEventCmdString(ID_CMD_POST_JSON_TO_PLUGINS, json);
+                nativeBridge.postJsonEvent(
+                        jsonhelpers.makeEvent(0, "ID_CMD_POST_JSON_TO_PLUGINS", "json_msg", json));
 
-//                nativeLib.sendPluginMessage( "GRIB_APPLY_JSON_CONFIG", m_GRIBReturn);
 
-                // defer hte application of settings until the screen refreshes
-                //Handler handler = new Handler();
-                //handler.postDelayed(new Runnable() {
-                //   public void run() {
-                //      nativeLib.invokeCmdEventCmdString( ID_CMD_APPLY_SETTINGS, m_settingsReturn);
-                // }
-                // }, 100);
             } else if (resultCode == Activity.RESULT_CANCELED) {
 //                Log.i("DEBUGGER_TAG", "onqtActivityResultGE");
             }
@@ -471,14 +470,16 @@ public class HostEnvironment {
             if (resultCode == Activity.RESULT_OK) {
                 m_settingsReturn = data.getStringExtra("SettingsString");
                 Log.i("OpenCPN", "onActivityResult.SettingsString: " + m_settingsReturn);
-                nativeLib.invokeCmdEventCmdString(ID_CMD_NULL_REFRESH, m_settingsReturn);
+                nativeBridge.postJsonEvent(
+                        jsonhelpers.makeEvent(0, "ID_CMD_NULL_REFRESH", "settings", m_settingsReturn));
 
                 // defer hte application of settings until the screen refreshes
 
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     public void run() {
-                        nativeLib.invokeCmdEventCmdString(ID_CMD_APPLY_SETTINGS, m_settingsReturn);
+                        nativeBridge.postJsonEvent(
+                                jsonhelpers.makeEvent(0, "ID_CMD_APPLY_SETTINGS", "settings", m_settingsReturn));
                     }
                 }, 500);
 
@@ -526,7 +527,8 @@ public class HostEnvironment {
 
                 Log.i("DEBUGGER_TAG", "finalPositionString " + vpSet);
 
-                nativeLib.invokeCmdEventCmdString(ID_CMD_SETVP, vpSet);
+                nativeBridge.postJsonEvent(
+                        jsonhelpers.makeEvent(0, "ID_CMD_SETVP", "vp_string", vpSet));
 
             } else if (resultCode == Activity.RESULT_CANCELED) {
 //                Log.i("DEBUGGER_TAG", "onqtActivityResultE");
