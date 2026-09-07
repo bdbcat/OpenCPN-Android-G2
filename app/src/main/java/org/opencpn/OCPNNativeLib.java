@@ -18,7 +18,7 @@ public class OCPNNativeLib {
   /**
    * Adds two integers, returning their sum
    */
-  public native int add( int v1, int v2 );
+  //public native int add( int v1, int v2 );
 
   /**
    * Returns Hello World string
@@ -35,7 +35,7 @@ public class OCPNNativeLib {
   public native int onConfigChange( int orientation );
 
   public native int invokeCmdEventCmdString( int cmd_id, String s);
-  public native String getVPCorners();
+  //public native String getVPCorners();
   public native String getVPS();
 
   //public native int setDownloadStatus( int status, String url);
@@ -56,4 +56,7 @@ public class OCPNNativeLib {
   public native void onScreenResized(int w, int h, int toolbarHeight);
 
   public native void postJsonEvent(String payload);
+
+  public native String SyncQuery(String payload);
+
 }

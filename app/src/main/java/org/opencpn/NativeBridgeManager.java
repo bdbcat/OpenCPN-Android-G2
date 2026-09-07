@@ -42,8 +42,6 @@ public class NativeBridgeManager {
     }
 
 
-
-
     // ----------------------------------------------------------------------------------
     // --- Public lifecycle API ---
 

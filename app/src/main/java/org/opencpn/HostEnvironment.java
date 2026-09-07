@@ -1415,8 +1415,33 @@ public class HostEnvironment {
 
         Intent intent = new Intent(activity, org.opencpn.OCPNMapsActivity.class);
 
-        String s = nativeLib.getVPCorners();
-        if (s.isEmpty()) {
+        String squery = "";
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("query", "GET_VP");
+            squery = obj.toString();
+        } catch(Exception e) {
+            squery = "{}";
+        }
+
+        String result = nativeLib.SyncQuery(squery);
+        //Log.i("OpenCPN", result);
+
+        try {
+            JSONObject jsonVP = new JSONObject(result);
+            m_gminitialZoom = jsonVP.getDouble("scale");
+            m_gminitialLat = jsonVP.getDouble("clat");
+            m_gminitialLon = jsonVP.getDouble("clon");
+        } catch (Exception e) {
+            Log.i("DEBUGGER_TAG", "invokeGoogleMaps..Error, Invalid JSON");
+            return "66";
+        }
+
+        intent.putExtra("Initial_VP", result);
+
+
+
+/*        if (s.isEmpty()) {
             Log.i("DEBUGGER_TAG", "invokeGoogleMaps..Error, empty VPCorners");
             return "66";
         }
@@ -1458,9 +1483,9 @@ public class HostEnvironment {
 
         m_gminitialZoom = Double.parseDouble(initialZoom);
 
-        intent.putExtra("VP_CORNERS", s);
+        intent.putExtra("Initial_VP", result);
         intent.putExtra("VPS", v);
-
+*/
         int height = activity.getWindow().getDecorView().getHeight();
         int width = activity.getWindow().getDecorView().getWidth();
         intent.putExtra("WIDTH", width);

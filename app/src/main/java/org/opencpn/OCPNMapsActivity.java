@@ -2,7 +2,6 @@ package org.opencpn;
 
 import android.util.Log;
 import android.os.Bundle;
-import java.util.StringTokenizer;
 import java.lang.String;
 import java.lang.Math;
 
@@ -20,35 +19,47 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import android.content.Intent;
 
+import org.json.JSONObject;
 import org.opencpn.opencpn.R;
 
 
 public class OCPNMapsActivity extends FragmentActivity implements OnMapReadyCallback {
-
-    public String vpCorners = "";
     public int width = 400;
     public int height = 600;
 
-    public double latne = 40;
-    public double lonne = -85;
-    public double latsw = 39;
-    public double lonsw = -86;
     public double initialZoom = 1.0;
     public double gLat = 0.;
     public double gLon = 0.;
     public double clat = 0;
     public double clon = 0;
     public double scale_ppm = 1;
+    JSONObject jsonVP = null;
 
     public GoogleMap m_map;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         Bundle extras = getIntent().getExtras();
+
         if (extras != null) {
+            width = extras.getInt("WIDTH");
+            height = extras.getInt("HEIGHT");
+
+            String svp = extras.getString("Initial_VP");
+
+            try {
+                jsonVP = new JSONObject(svp);
+            } catch (Exception e) {
+                Log.i("DEBUGGER_TAG", "OCPNMapsActivity..Error, Invalid JSON");
+                try {
+                    jsonVP = new JSONObject("{}");
+                } catch (Exception e2) {
+                    Log.i("DEBUGGER_TAG", "OCPNMapsActivity..Error2, Invalid JSON");
+                }
+            }
+/*
             vpCorners = extras.getString("VP_CORNERS");
 //            Log.i("DEBUGGER_TAG", vpCorners);
 
@@ -95,29 +106,32 @@ public class OCPNMapsActivity extends FragmentActivity implements OnMapReadyCall
                 Log.i("DEBUGGER_TAG", "OCPNMapsActivity..Error, Invalid VPS");
             }
         }
-
-        setContentView(R.layout.activity_maps);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+*/
+            setContentView(R.layout.activity_maps);
+            SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+        }
     }
 
     @Override
     public void onMapReady(GoogleMap map) {
 
-        // Add a marker for Ownship.
-        LatLng ownship = new LatLng(gLat, gLon);
-        map.addMarker(new MarkerOptions().position(ownship).title("OwnShip"));
-
         map.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
 
-        LatLng llne = new LatLng( latne, lonne);
-        LatLng llsw = new LatLng( latsw, lonsw);
+        try {
+            // Add a marker for Ownship.
+            gLat = jsonVP.getDouble("glat");
+            gLon = jsonVP.getDouble("glon");
+            LatLng ownship = new LatLng(gLat, gLon);
+            map.addMarker(new MarkerOptions().position(ownship).title("OwnShip"));
 
-        LatLngBounds bounds = new LatLngBounds(llsw, llne);
-        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds( bounds, width, height, 0);
+            LatLng llne = new LatLng( jsonVP.getDouble("maxlat"), jsonVP.getDouble("maxlon"));;
+            LatLng llsw = new LatLng( jsonVP.getDouble("minlat"), jsonVP.getDouble("minlon"));;
 
-        map.moveCamera(cu);
+            LatLngBounds bounds = new LatLngBounds(llsw, llne);
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds( bounds, width, height, 0);
+            map.moveCamera(cu);
 
         // capture the initial zoom
         //Maps on Google Maps have an integer “zoom level” which defines the resolution of the current view.
@@ -130,12 +144,14 @@ public class OCPNMapsActivity extends FragmentActivity implements OnMapReadyCall
         //More information on how this is done is available in the Google Maps API documentation.
 
 
-        CameraPosition cp = map.getCameraPosition();
-        initialZoom = Math.pow(2, cp.zoom);
+            CameraPosition cp = map.getCameraPosition();
+            initialZoom = Math.pow(2, cp.zoom);
  //       Log.i("DEBUGGER_TAG", "Initial: " + cp.toString());
 
-        m_map = map;
+            m_map = map;
+        } catch (Exception e) {
 
+        }
     }
 
     @Override
