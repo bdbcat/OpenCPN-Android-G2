@@ -1,7 +1,5 @@
 package org.opencpn;
 
-
-
 public class OCPNNativeLib {
 
     private static OCPNNativeLib ourInstance = new OCPNNativeLib();
@@ -12,48 +10,6 @@ public class OCPNNativeLib {
 
     private OCPNNativeLib() {
     }
-
-
-
-  /**
-   * Adds two integers, returning their sum
-   */
-  //public native int add( int v1, int v2 );
-
-  /**
-   * Returns Hello World string
-   */
-  //public native String hello();
-
-  //public native int test();
-
-  //public native int processNMEA(String nmea_string);
-  //public native int processBTNMEA(String nmea_string);
-
-  //public native int processARBNMEA(String NMEA_sentence);
-
-  //public native int onConfigChange( int orientation );
-
-  //public native int invokeCmdEventCmdString( int cmd_id, String s);
-  //public native String getVPCorners();
-  //public native String getVPS();
-
-  //public native int setDownloadStatus( int status, String url);
-  //public native int onMouseWheel(int dir);
-  //public native int notifyFullscreenChange( boolean bFull );
-
-  //public native int sendPluginMessage( String iD, String message);
-
-  //public native int processSailTimer(double WindAngleMagnetic, double WindSpeedKnots);
-
-
-  //public native int onSoundDone(long junk);
-
-  //public native void ImportTmpGPX(String filePath, boolean isLayer, boolean isPersistent);
-
-  //public native void onScreenResized(int w, int h, int toolbarHeight);
-
-  //public native int getTLWCount();
 
   public native int ScheduleCleanExit();
   public native void postJsonEvent(String payload);
