@@ -32,31 +32,31 @@ public class OCPNNativeLib {
 
   //public native int processARBNMEA(String NMEA_sentence);
 
-  public native int onConfigChange( int orientation );
+  //public native int onConfigChange( int orientation );
 
   //public native int invokeCmdEventCmdString( int cmd_id, String s);
   //public native String getVPCorners();
   //public native String getVPS();
 
   //public native int setDownloadStatus( int status, String url);
-  public native int onMouseWheel(int dir);
-  public native int notifyFullscreenChange( boolean bFull );
+  //public native int onMouseWheel(int dir);
+  //public native int notifyFullscreenChange( boolean bFull );
 
-  public native int sendPluginMessage( String iD, String message);
-  public native int getTLWCount();
+  //public native int sendPluginMessage( String iD, String message);
 
   //public native int processSailTimer(double WindAngleMagnetic, double WindSpeedKnots);
 
+
+  //public native int onSoundDone(long junk);
+
+  //public native void ImportTmpGPX(String filePath, boolean isLayer, boolean isPersistent);
+
+  //public native void onScreenResized(int w, int h, int toolbarHeight);
+
+  public native int getTLWCount();
+
   public native int ScheduleCleanExit();
-
-  public native int onSoundDone(long androidSoundPtr);
-
-  public native void ImportTmpGPX(String filePath, boolean isLayer, boolean isPersistent);
-
-  public native void onScreenResized(int w, int h, int toolbarHeight);
-
   public native void postJsonEvent(String payload);
-
   public native String SyncQuery(String payload);
 
 }

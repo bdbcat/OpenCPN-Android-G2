@@ -1236,7 +1236,7 @@ public class HostEnvironment {
             outputStream.write(buffer, 0, count);
     }
 
-    public String playSound(final String fileName, final String sound) {
+    public String playSound(final String fileName) {
         Log.i("DEBUGGER_TAG", "playSound " + fileName);
         if (mediaPlayer == null) {
             mediaPlayer = new MediaPlayer();
@@ -1255,9 +1255,8 @@ public class HostEnvironment {
                                 new MediaPlayer.OnCompletionListener() {
                                     @Override
                                     public void onCompletion(MediaPlayer mp) {
-                                        BigInteger soundcb = new BigInteger(sound, 16);
-                                        long ptr = soundcb.longValue();
-                                        nativeLib.onSoundDone(ptr);
+                                        nativeBridge.postJsonEvent(
+                                              jsonhelpers.makeEvent(0, "ON_SOUND_DONE"));
                                     }
                                 }
                         );
@@ -1375,7 +1374,9 @@ public class HostEnvironment {
         m_fullScreen = !m_fullScreen;
         if (m_fullScreen) setFullscreen(1);
         else setFullscreen(0);
-        nativeLib.notifyFullscreenChange(m_fullScreen);
+        nativeLib.postJsonEvent(JSONHelpers.makeEvent(0,"NOTIFY_FULLSCREEN_EVENT",
+                "screen_state",  m_fullScreen  ? 1 : 0));
+
     }
 
     public String doAndroidSettings(String settings) {

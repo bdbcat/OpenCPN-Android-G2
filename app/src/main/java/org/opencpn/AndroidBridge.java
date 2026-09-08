@@ -430,12 +430,9 @@ public class AndroidBridge {
                 }
 
                 case "PLAY_SOUND": {
-                    int seq = obj.optInt("seq", -1);
-                    int icon_state = obj.optInt("icon_state", 0);
                     String fileName = obj.optString("filename", "");
-                    String sound = obj.optString("sound", "");
 
-                    String jResult =  hostEnvironment.playSound(fileName, sound);
+                    String jResult =  hostEnvironment.playSound(fileName);
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");
                     result.put("payload", jResult);
