@@ -22,6 +22,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import org.json.JSONObject;
 import org.opencpn.opencpn.R;
 
 public class AppController {
@@ -344,9 +345,26 @@ public class AppController {
         if (!m_backButtonEnable)
             return false;
 
-        Log.i("OpenCPN", "TLWCount " + nativeLib.getTLWCount());
+        int tlw = 1;
+        String squery = "";
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("query", "GET_TLW");
+            squery = obj.toString();
 
-        if (nativeLib.getTLWCount() > 1)
+            String result = nativeLib.SyncQuery(squery);
+
+            JSONObject jsonTLW = new JSONObject(result);
+            tlw = jsonTLW.getInt("n_tlw");
+          ;
+        } catch (Exception e) {
+            Log.i("DEBUGGER_TAG", "handleOCPNBackButton..Error, Invalid JSON");
+            tlw = 1;
+        }
+
+        Log.i("OpenCPN", "TLWCount " + tlw);
+
+        if (tlw > 1)
             return false;
 
         long now = System.currentTimeMillis();

@@ -53,7 +53,7 @@ public class OCPNNativeLib {
 
   //public native void onScreenResized(int w, int h, int toolbarHeight);
 
-  public native int getTLWCount();
+  //public native int getTLWCount();
 
   public native int ScheduleCleanExit();
   public native void postJsonEvent(String payload);
