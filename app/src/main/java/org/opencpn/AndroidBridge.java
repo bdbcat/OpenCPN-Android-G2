@@ -696,7 +696,7 @@ public class AndroidBridge {
 
                 case "SCAN_SERIAL_PORTS": {
                     int val = obj.optInt("parameter", 0);
-                    String jResult = "";//scanSerialPorts(val);
+                    String jResult =  connectivityManager.scanSerialPorts(val);
 
                     JSONObject result = new JSONObject();
                     result.put("status", "OK");

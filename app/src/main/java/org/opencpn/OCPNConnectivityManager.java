@@ -97,6 +97,8 @@ public class OCPNConnectivityManager {
 
         wifi = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
+        uSerialHelper = new UsbSerialHelper();
+
         m_GPSServer = new GPSServer();
 
         GPSconnection = new ServiceConnection() {
