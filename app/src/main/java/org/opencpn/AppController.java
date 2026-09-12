@@ -414,7 +414,7 @@ public class AppController {
 
     void finishApp() {
         Log.i("OpenCPN", "finishApp");
-        activity.finish();
+        activity.runOnUiThread(() -> activity.finish());
     }
 
  public String DisableRotation() {

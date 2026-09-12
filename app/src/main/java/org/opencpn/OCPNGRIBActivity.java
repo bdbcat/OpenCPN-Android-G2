@@ -27,6 +27,11 @@ package org.opencpn;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -34,12 +39,19 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Map;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.UriPermission;
+import android.database.Cursor;
+import android.net.Uri;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.SwitchPreference;
 import android.preference.CheckBoxPreference;
+import android.provider.DocumentsContract;
+import android.provider.OpenableColumns;
+
 import android.text.format.Time;
 import android.util.Log;
 
@@ -84,6 +96,29 @@ public class OCPNGRIBActivity extends Activity
         GFS25
       }
 
+    private SharedPreferences m_prefs;
+    private String storedUriString = "";
+    private String m_treeId = "Documents";
+
+    public static String getDisplayName(Context context, Uri uri) {
+        try (Cursor cursor = context.getContentResolver().query(
+                uri,
+                new String[] { OpenableColumns.DISPLAY_NAME },
+                null,
+                null,
+                null)) {
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0)
+                    return cursor.getString(index);
+            }
+        } catch (Exception e) {
+            // Handle provider failure as appropriate
+        }
+
+        return null;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +161,15 @@ public class OCPNGRIBActivity extends Activity
           }
         });
 
+        Button button_import = (Button)findViewById(R.id.button_grib_import);
+        button_import.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.i("GRIB", "button_grib_import");
+
+                doImportFile();
+            }
+        });
 
 
 
@@ -147,6 +191,137 @@ public class OCPNGRIBActivity extends Activity
 
         purgeDatedFiles( 7 );
     }
+
+    public void doImportFile() {
+        Log.i("GRIB", "doImportFile");
+
+        boolean permissionsGranted = false;
+
+        // Check to see if SAF access is already granted
+        m_prefs = getSharedPreferences(
+                SafManager.PREFS_NAME, Activity.MODE_PRIVATE);
+
+        try {
+            // ------------------------------------------------------------
+            // Check existing persisted permission
+            // ------------------------------------------------------------
+            storedUriString = m_prefs.getString("tree_uri_" + m_treeId,null);
+
+            if (storedUriString != null) {
+                Uri storedUri =
+                        Uri.parse(storedUriString);
+                for (UriPermission perm :
+                        getContentResolver()
+                                .getPersistedUriPermissions()) {
+
+                    if (perm.getUri().equals(storedUri)
+                            && perm.isReadPermission()) {
+                        // --------------------------------------------
+                        // Already authorized
+                        // --------------------------------------------
+                        permissionsGranted = true;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("GRIB","ensureTreeAccess exception", e);
+        }
+
+        if (!permissionsGranted) {
+            // Launch SAF dialog to get permission
+            Intent intent =
+                    new Intent( Intent.ACTION_OPEN_DOCUMENT_TREE );
+
+            intent.addFlags(
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
+                            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+            );
+
+            // ------------------------------------------------------------
+            // Optional UX improvement:
+            // hint initial location if previously known
+            // ------------------------------------------------------------
+
+            if(storedUriString != null) {
+                intent.putExtra(
+                        DocumentsContract.EXTRA_INITIAL_URI,
+                        Uri.parse(storedUriString)
+                );
+            }
+            startActivityForResult( intent, 3);
+        } else {
+
+            // Start the SAF file picker dialog here
+            try {
+                Intent intent =
+                        new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addFlags(
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION |
+                                Intent.FLAG_GRANT_WRITE_URI_PERMISSION |
+                                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION |
+                                Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                );
+                intent.setType("*/*");       // Need this for ACTION_OPEN_DOCUMENT
+
+                String suri = "content://com.android.externalstorage.documents/tree/primary%3ADocuments";
+                Uri initialUri = Uri.parse(suri);;
+                intent.putExtra(
+                        DocumentsContract.EXTRA_INITIAL_URI,
+                        initialUri
+                );
+
+                startActivityForResult( intent, 4 );
+            }
+            catch(Exception e) {
+                Log.e("GRIB", "openDocument exception", e);
+            }
+        }
+    }
+
+    void completeImportFile(Uri importFileuri){
+        String displayName = getDisplayName(this, importFileuri);
+        if (displayName == null || displayName.isEmpty()) {
+            // Handle provider that doesn't supply a name
+            displayName = "untitled.grb";
+        }
+
+        File directory = new File(getExternalFilesDir(null), "/GRIBS/import");
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                Log.e("GRIB", "Failed to create directory: " + directory);
+                return;
+            }
+        }
+
+        File dest = new File(directory, displayName);
+
+        try {
+            InputStream in = getContentResolver().openInputStream(importFileuri);
+            OutputStream out = new FileOutputStream(dest);
+
+            byte[] buffer = new byte[64 * 1024];
+            int n;
+              while ((n = in.read(buffer)) != -1) {
+                out.write(buffer, 0, n);
+
+            }
+
+        } catch (Exception e) {
+            Log.e("GRIB", "openDocument copy exception", e);
+            return;
+        }
+
+        // Open the file for display by GRIB viewer
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        Editor editor = preferences.edit();
+        editor.putString("GRIB_dest_file", dest.getAbsolutePath());
+        editor.apply();
+        finish();
+
+    }
+
 
     public void doSelectFile(){
 
@@ -217,7 +392,7 @@ public class OCPNGRIBActivity extends Activity
                String filePath = "";
 
                Bundle bundle = data.getExtras();
-               if(bundle != null){
+               if (bundle != null) {
                    File file = (File) bundle.get(FileChooserActivity.OUTPUT_FILE_OBJECT);
                    filePath = file.getAbsolutePath();
                }
@@ -229,13 +404,46 @@ public class OCPNGRIBActivity extends Activity
                editor.apply();
                finish();
            }
-       }
-       else if( requestCode == 2) {         // Download
-           if( resultCode == OCPNGRIBDownloadPrefActivity.RESULT_DOWNLOAD_OK ){
+       } else if (requestCode == 2) {         // Download
+           if (resultCode == OCPNGRIBDownloadPrefActivity.RESULT_DOWNLOAD_OK) {
                finish();
            }
-       }
+       } else if (requestCode == 3) {     // SAF permission request
+           if (resultCode != Activity.RESULT_OK
+                   || data == null
+                   || data.getData() == null) {
+               return;
+           }
 
+
+           Uri treeUri = data.getData();
+           final int takeFlags =
+                   data.getFlags()
+                           & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                           | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+           getContentResolver()
+                   .takePersistableUriPermission(
+                           treeUri,
+                           Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                   | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                   );
+
+           // Persist URI string
+           m_prefs.edit().putString("tree_uri_" + m_treeId, treeUri.toString()).apply();
+
+           // Try again, this time with known good permission
+           doImportFile();
+       } else if (requestCode == 4) {     // SAF file selected
+           if (resultCode != Activity.RESULT_OK
+                   || data == null
+                   || data.getData() == null) {
+               return;
+           }
+
+           Uri treeUri = data.getData();
+           completeImportFile(treeUri);
+       }
    }
 
    @Override

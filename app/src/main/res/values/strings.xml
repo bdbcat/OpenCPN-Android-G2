@@ -19,6 +19,7 @@
     <string name="ocpn_GRIB_activity_Display">GRIB Display Settings</string>
     <string name="ocpn_GRIB_activity_Choose">Choose local GRIB file</string>
     <string name="ocpn_GRIB_activity_Request">Request new GRIB file download</string>
+    <string name="ocpn_GRIB_activity_Import">Import GRIB file</string>
     <string name="ocpn_GRIB_download_dialog_Request">Request GRIB Download...</string>
     <string name="ocpn_GRIB_download_dialog_OK">GRIB file downloaded OK</string>
     <string name="ocpn_GRIB_download_dialog_NO_INTERNET">No Internet available\n Please check your device Mobile Data or WiFi settings.</string>

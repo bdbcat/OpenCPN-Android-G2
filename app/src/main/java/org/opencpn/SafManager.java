@@ -19,6 +19,7 @@ public class SafManager {
 
     private static final String TAG = "OpenCPN";
     //private static final int REQUEST_SAF_TREE = 1001;
+    public static final String PREFS_NAME = "opencpn_saf_prefs";
 
     //------------------------
     // Request codes
@@ -78,8 +79,7 @@ public class SafManager {
         this.activity = activity;
         this.nativeBridge = nativeBridge;
         this.prefs = activity.getSharedPreferences(
-                "opencpn_saf_prefs",
-                Activity.MODE_PRIVATE
+                PREFS_NAME, Activity.MODE_PRIVATE
         );
     }
     //---------------------------------------------------------------------

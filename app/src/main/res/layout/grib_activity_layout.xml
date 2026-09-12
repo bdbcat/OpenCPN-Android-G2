@@ -35,6 +35,17 @@
             android:layout_alignParentStart="true"
              />
 
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/ocpn_GRIB_activity_Import"
+            android:id="@+id/button_grib_import"
+            android:textSize="26dp"
+            android:layout_marginTop="28dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            />
+
     <FrameLayout
         android:id="@+id/displaycontainer"
         android:layout_width="match_parent"
