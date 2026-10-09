@@ -37,6 +37,7 @@
 package org.qtproject.qt5.android.bindings;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.content.Context;
@@ -66,6 +67,9 @@ import org.opencpn.AppController;
 import org.opencpn.MyQtActivity;
 import org.qtproject.qt5.android.QtActivityDelegate;
 import org.qtproject.qt5.android.QtNative;
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class QtActivity extends Activity
 {
@@ -1294,6 +1298,46 @@ public class QtActivity extends Activity
         return "OK";
     }
 
+    public String simpleYesNoDialog(final String title, final String message) {
+
+        final QtActivityDelegate delegate = QtNative.activityDelegate();
+        if (delegate == null)
+            return "NO";
+
+        final Semaphore semaphore = new Semaphore(0);
+        final AtomicReference<String> result = new AtomicReference<>("NO");
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog dialog = new AlertDialog.Builder(QtActivity.this)
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setCancelable(false)
+                        .setPositiveButton("Yes", (d, id) -> {
+                            result.set("YES");
+                            semaphore.release();
+                        })
+                        .setNegativeButton("No", (d, id) -> {
+                            result.set("NO");
+                            semaphore.release();
+                        })
+                        .create();
+
+                dialog.show();
+            }
+        });
+
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "NO";
+        }
+
+        return result.get();
+    }
+
     public String launchBrowser(String url) {
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         return "OK";
@@ -1388,6 +1432,7 @@ public class QtActivity extends Activity
 
         return "";
     }
+
 
 
     /*
