@@ -347,24 +347,49 @@ public class AppController {
 
         int tlw = 1;
         String squery = "";
+        int proc_back = 0;
+        boolean do_exit = false;
         try {
             JSONObject obj = new JSONObject();
             obj.put("query", "GET_TLW");
             squery = obj.toString();
 
             String result = nativeLib.SyncQuery(squery);
-
             JSONObject jsonTLW = new JSONObject(result);
             tlw = jsonTLW.getInt("n_tlw");
-          ;
         } catch (Exception e) {
             Log.i("DEBUGGER_TAG", "handleOCPNBackButton..Error, Invalid JSON");
             tlw = 1;
         }
-
         Log.i("OpenCPN", "TLWCount " + tlw);
 
-        if (tlw > 1)
+        if (Build.VERSION.SDK_INT < 33) {
+            if (tlw > 1)
+                do_exit = false;
+        }
+        else {
+            if (tlw > 1) {
+                // This is a "fire-and-forget operation
+                // Instruct Native side to cloae an aux window, e.g. Dashboard
+                // No useful information is returned.
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("query", "PROCESS_BACK");
+                    squery = obj.toString();
+
+                    String result = nativeLib.SyncQuery(squery);
+
+                    JSONObject jsonBACK = new JSONObject(result);
+                    proc_back = jsonBACK.getInt("n_proc");
+                } catch (Exception e) {
+                    Log.i("DEBUGGER_TAG", "handleOCPNBackButton..Error, Invalid JSON");
+                }
+                Log.i("OpenCPN", "TLWProc " + proc_back);
+            }
+            do_exit = (tlw == 1);
+        }
+
+        if (!do_exit)
             return false;
 
         long now = System.currentTimeMillis();
@@ -403,7 +428,7 @@ public class AppController {
             preClose();
             return true;
         } else {
-            return false;
+            return true; //false;
         }
     }
 
