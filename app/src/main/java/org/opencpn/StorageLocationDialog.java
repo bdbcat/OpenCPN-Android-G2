@@ -34,126 +34,11 @@ public class StorageLocationDialog {
     static final int selectedTitleColor  = Color.rgb(140, 140, 140);
     static final int selectedDescriptionColor = Color.rgb(170, 170, 170);
 
+    public static final String PREFS_NAME = "opencpn_sld_prefs";
 
     public interface Callback {
         void onLocationSelected(StorageLocation location,
                                 boolean rememberChoice);
-    }
-
-    public static void xshow(Activity activity,
-                            boolean isImport,
-                            Callback callback) {
-
-        final StorageLocation[] selected =
-                { StorageLocation.APP_PRIVATE };
-
-        final boolean[] remember =
-                { false };
-
-        String title = "Choose Location";
-
-        String message;
-
-        if (isImport) {
-            message =
-                    "Where should the file be imported from?";
-        } else {
-            message =
-                    "Where should the file be saved?";
-        }
-
-        String[] choices;
-
-        if (isImport) {
-
-            choices = new String[] {
-                    "OpenCPN Storage\nEasy access from a connected PC",
-                    "Device Documents\nChoose files shared by Android apps"
-            };
-
-        } else {
-
-            choices = new String[] {
-                    "OpenCPN Storage\nEasy access from a connected PC",
-                    "Device Documents\nAccessible to other Android apps"
-            };
-        }
-
-        AlertDialog.Builder builder =
-                new AlertDialog.Builder(activity);
-
-        builder.setTitle(title);
-
-        builder.setMessage(message);
-
-        builder.setSingleChoiceItems(
-                choices,
-                0,
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int which) {
-
-                        if (which == 0) {
-                            selected[0] =
-                                    StorageLocation.APP_PRIVATE;
-                        } else {
-                            selected[0] =
-                                    StorageLocation.SHARED_DOCUMENTS;
-                        }
-                    }
-                });
-
-        builder.setMultiChoiceItems(
-                new String[] { "Remember my choice" },
-                new boolean[] { false },
-                new DialogInterface.OnMultiChoiceClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int which,
-                                        boolean isChecked) {
-
-                        remember[0] = isChecked;
-                    }
-                });
-
-        builder.setNegativeButton(
-                "Cancel",
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int which) {
-
-                        callback.onLocationSelected(
-                                StorageLocation.CANCELLED,
-                                false);
-
-                        dialog.dismiss();
-                    }
-                });
-
-        builder.setPositiveButton(
-                "Continue",
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog,
-                                        int which) {
-
-                        callback.onLocationSelected(
-                                selected[0],
-                                remember[0]);
-
-                        dialog.dismiss();
-                    }
-                });
-
-        builder.setCancelable(true);
-
-        builder.show();
     }
 
     private static int themeColor(Context context, int attr) {
@@ -201,6 +86,7 @@ public class StorageLocationDialog {
 
     public static void show(Activity activity,
                              boolean isImport,
+                             Integer initialSelection,
                              Callback callback) {
         Context themedContext =
                 new ContextThemeWrapper(
@@ -233,13 +119,25 @@ public class StorageLocationDialog {
                 { StorageLocation.APP_PRIVATE };
 
         cardPrivate.setChecked(true);
-        selectCard(cardPrivate,
+
+        if (initialSelection == 1) {
+            selectCard(cardDocuments,
+                    documentsTitle,
+                    documentsDescriptionText,
+                    cardPrivate,
+                    privateTitle,
+                    privateDescriptionText,
+                    activity);
+
+        } else {
+             selectCard(cardPrivate,
                 privateTitle,
                 privateDescriptionText,
                 cardDocuments,
                 documentsTitle,
                 documentsDescriptionText,
                 activity);
+        }
 
         cardPrivate.setOnClickListener(v -> {
 

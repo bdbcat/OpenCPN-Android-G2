@@ -31,7 +31,7 @@ public class FileController {
 
     public static final String PREF_CHOOSER_WILD_CARD = "PREF_CHOOSER_WILD_CARD";
     private static final String PREFS_NAME = "opencpn_storage";
-
+    private static final String PREF_SLC_REMEMBER_CHOICE = "remember_choice";
     private static final String PREF_REMEMBER = "remember_storage_location";
 
     private static final String PREF_LOCATION = "storage_location";
@@ -218,9 +218,16 @@ public class FileController {
 
     public String fileDomainSelector(int seq, boolean isImport) {
         activity.runOnUiThread(() -> {
+            android.content.SharedPreferences prefs = activity.getSharedPreferences(
+                    PREFS_NAME, Activity.MODE_PRIVATE);
+            Integer fdc_remembered_ordinal =  prefs.getInt(PREF_SLC_REMEMBER_CHOICE, -1);
+            if (fdc_remembered_ordinal == -1)
+                fdc_remembered_ordinal = 0;
+
             StorageLocationDialog.show(
                     activity,
                     isImport,      // false = Export
+                    fdc_remembered_ordinal,
                     new StorageLocationDialog.Callback() {
 
                         @Override
@@ -228,6 +235,14 @@ public class FileController {
                                 StorageLocationDialog.StorageLocation location,
                                 boolean rememberChoice) {
                             m_rememberChoice = rememberChoice;
+                            if (m_rememberChoice) {
+                                android.content.SharedPreferences prefs = activity.getSharedPreferences(
+                                        PREFS_NAME, Activity.MODE_PRIVATE);
+
+                                prefs.edit()
+                                        .putInt(PREF_SLC_REMEMBER_CHOICE, location.ordinal())
+                                        .apply();
+                            }
 
                             switch (location) {
 
@@ -820,7 +835,8 @@ public class FileController {
         activity.runOnUiThread(() -> {
             StorageLocationDialog.show(
                 activity,
-                false,      // false = Export
+               false,      // false = Export
+                 0,
                 new StorageLocationDialog.Callback() {
 
                     @Override
