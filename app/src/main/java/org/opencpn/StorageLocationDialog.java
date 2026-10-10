@@ -313,6 +313,14 @@ public class StorageLocationDialog {
                         .create();
 
         dialog.show();
+
+        int buttonColor = Color.rgb(100, 181, 246);
+
+        dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                .setTextColor(buttonColor);
+
+        dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
+                .setTextColor(buttonColor);
     }
 
 
