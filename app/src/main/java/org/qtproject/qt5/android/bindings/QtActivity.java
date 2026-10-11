@@ -55,10 +55,12 @@ import android.view.ActionMode;
 import android.view.ActionMode.Callback;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager.LayoutParams;
 import android.view.accessibility.AccessibilityEvent;
@@ -70,6 +72,7 @@ import org.qtproject.qt5.android.QtNative;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+import android.content.pm.ActivityInfo;
 
 public class QtActivity extends Activity
 {
@@ -1365,16 +1368,19 @@ public class QtActivity extends Activity
         return "OK";
     }
 
-    public void disableRotation() {
+    public String DisableRotation() {
         AppController app = getAppControllerShim();
         if (app != null)
             app.DisableRotation();
+        return "OK";
+
     }
 
-    public void EnableRotation() {
+    public String EnableRotation() {
         AppController app = getAppControllerShim();
         if (app != null)
             app.EnableRotation();
+        return "OK";
     }
 
     public void hideBusyCircle() {

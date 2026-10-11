@@ -57,6 +57,8 @@ public class AppController {
         this.activity = activity;
     }
     public LinearLayout m_container;
+    private int m_previousOrientation;
+    private boolean m_rotationLocked;
 
 
     // ---------------------------------------------------
@@ -442,17 +444,22 @@ public class AppController {
         activity.runOnUiThread(() -> activity.finish());
     }
 
- public String DisableRotation() {
-        //TODO investigate
- //       activity.lockActivityOrientation(this);
+      public String DisableRotation() {
+        if (!m_rotationLocked) {
+            m_previousOrientation = activity.getRequestedOrientation();
+            activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
+            m_rotationLocked = true;
+        }
         return "OK";
     }
 
     public String EnableRotation() {
-        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        if (m_rotationLocked) {
+            activity.setRequestedOrientation(m_previousOrientation);
+            m_rotationLocked = false;
+        }
         return "OK";
     }
-
 
     //---------------------------------------------------------------
     // Chart migrator support
