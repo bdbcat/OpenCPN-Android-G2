@@ -104,6 +104,8 @@ public class MenuController {
         menuState.routeAnnunciatorVisible = false;
     }
 
+    double getScale() { return mScale; }
+
     public String enableOptionsMenu(int bEnable) {
         Log.i("OpenCPN", "enableOptionsMenu " + bEnable);
         if (bEnable == 1)

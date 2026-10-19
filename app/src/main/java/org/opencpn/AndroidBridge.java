@@ -702,7 +702,6 @@ public class AndroidBridge {
                     result.put("status", "OK");
                     result.put("payload", jResult);
 
-                    Log.i("OpenCPN","^^^^^^UNIMPLEMENTED: " + cmd);
                     return result.toString();
                 }
 

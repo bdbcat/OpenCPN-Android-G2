@@ -1639,11 +1639,13 @@ public class HostEnvironment {
             @Override
             public void run() {
                 if (null != mc) {
-                    mc.setScale(scale);
+                    if (scale != mc.getScale()) {
+                        mc.setScale(scale);
 
-                    ViewGroup root = activity.findViewById(android.R.id.content);
-                    ac.rebuildHybridLayout(root);
-                    scheduleLayoutUpdate();
+                        ViewGroup root = activity.findViewById(android.R.id.content);
+                        ac.rebuildHybridLayout(root);
+                        scheduleLayoutUpdate();
+                    }
                 }
             }
         });
