@@ -115,12 +115,13 @@ public class StorageLocationDialog {
         CheckBox checkRemember =
                 view.findViewById(R.id.check_remember);
 
-        final StorageLocation[] selected =
+       final StorageLocation[] selected =
                 { StorageLocation.APP_PRIVATE };
 
         cardPrivate.setChecked(true);
 
         if (initialSelection == 1) {
+            selected[0] = StorageLocation.SHARED_DOCUMENTS;
             selectCard(cardDocuments,
                     documentsTitle,
                     documentsDescriptionText,
@@ -130,7 +131,8 @@ public class StorageLocationDialog {
                     activity);
 
         } else {
-             selectCard(cardPrivate,
+            selected[0] = StorageLocation.APP_PRIVATE;
+            selectCard(cardPrivate,
                 privateTitle,
                 privateDescriptionText,
                 cardDocuments,
