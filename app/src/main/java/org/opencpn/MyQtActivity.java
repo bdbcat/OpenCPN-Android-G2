@@ -4,11 +4,14 @@ import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 import android.Manifest;
 import android.app.ActionBar;
+import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ApplicationInfo;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,7 +30,12 @@ import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import org.opencpn.opencpn.R;
+import org.qtproject.qt5.android.QtActivityDelegate;
+import org.qtproject.qt5.android.QtNative;
 import org.qtproject.qt5.android.bindings.QtActivity;
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class MyQtActivity extends QtActivity {
@@ -411,5 +419,279 @@ public class MyQtActivity extends QtActivity {
         // JNI callback later if needed
     }
 
+
+    // ======================================================
+// Legacy Plugin JNI Compatibility Layer
+// Temporary Qt5 compatibility shim.
+// Remove during Qt6 migration.
+// ======================================================
+
+    protected AppController getAppControllerShim() {
+        if (this instanceof org.opencpn.MyQtActivity) {
+            return ((org.opencpn.MyQtActivity)this)
+                    .getAppController();
+        }
+        return null;
+    }
+
+    public String getDeviceInfo() {
+        Log.i("LegacyJNI", "getDeviceInfo()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.getHostEnvironment().getDeviceInfo();
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDeviceInfo failed", t);
+            return "NOK";
+        }
+    }
+
+    public String getDisplayMetrics() {
+        Log.i("LegacyJNI", "getDisplayMetrics()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.getHostEnvironment().getDisplayMetrics();
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDisplayMetrics failed", t);
+            return "NOK";
+        }
+    }
+    //public String getDownloadStatus(final int ID) {
+
+    public String getDownloadStatus(final int id) {
+        Log.i("LegacyJNI", "getDownloadStatus()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.downloadManager.getDownloadStatus(id);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getDownloadStatus failed", t);
+            return "NOK";
+        }
+    }
+
+    public String unzipFile(final String source, final String destination, String nStrip, String bRemoveZip) {
+        Log.i("LegacyJNI", "unzipFile()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.downloadManager.unzipFile(source, destination, nStrip,  bRemoveZip);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "unzipFile failed", t);
+            return "NOK";
+        }
+    }
+
+
+
+    public String  getLocalizedDateTime( String format, int epoch_seconds) {
+        Log.i("LegacyJNI", "getLocalizedDateTime()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.getHostEnvironment().getLocalizedDateTime(format, epoch_seconds);
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "getLocalizedDateTime failed", t);
+            return "NOK";
+        }
+    }
+
+    //public String doGRIBActivity(String json)
+    public String  doGRIBActivity(String json) {
+        Log.i("LegacyJNI", "doGRIBActivity()");
+        try {
+            AppController app = getAppControllerShim();
+            if (app == null) {
+                Log.e("LegacyJNI", "AppController null");
+                return "NOK";
+            }
+            return app.getHostEnvironment().doGRIBActivity(json) ;
+        } catch(Throwable t) {
+            Log.e("LegacyJNI", "doGRIBActivity failed", t);
+            return "NOK";
+        }
+    }
+
+    // -------------------------------------------------------------------
+    // Particular legacy methods needed for o-charts_pi
+    //--------------------------------------------------------------------
+
+    public String GetLegacyServerdCreds() {
+        //TODO Check this on Explorer charts.
+        return "";
+    }
+
+    public String displayHTMLAlertDialog(final String title, final String htmlString) {
+        //Log.i("OpenCPN", "displayHTMLAlertDialog" + htmlString);
+
+        final QtActivityDelegate delegate = QtNative.activityDelegate();
+
+        if (null != delegate) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    AppController app = getAppControllerShim();
+                    if (app != null)
+                        app.getHostEnvironment().showHTMLAlertDialog(title, htmlString);
+
+                }
+            });
+        }
+        return "OK";
+    }
+
+    public String simpleYesNoDialog(final String title, final String message) {
+
+        final QtActivityDelegate delegate = QtNative.activityDelegate();
+        if (delegate == null)
+            return "NO";
+
+        final Semaphore semaphore = new Semaphore(0);
+        final AtomicReference<String> result = new AtomicReference<>("NO");
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AlertDialog dialog = new AlertDialog.Builder(MyQtActivity.this)
+                        .setTitle(title)
+                        .setMessage(message)
+                        .setCancelable(false)
+                        .setPositiveButton("Yes", (d, id) -> {
+                            result.set("YES");
+                            semaphore.release();
+                        })
+                        .setNegativeButton("No", (d, id) -> {
+                            result.set("NO");
+                            semaphore.release();
+                        })
+                        .create();
+
+                dialog.show();
+            }
+        });
+
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "NO";
+        }
+
+        return result.get();
+    }
+
+    public String launchBrowser(String url) {
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        return "OK";
+    }
+
+    public String getUnzipStatus(String dummy) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getDownloadManager().getUnzipStatus(dummy);
+
+        return "";
+    }
+
+    public String validateWriteLocation(final String destination, final String dummy, final int chainCode, final int dummyInt) {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                AppController app = getAppControllerShim();
+                if (app != null)
+                    app.getDownloadManager().validateWriteLocation(destination, dummy, chainCode, dummyInt);
+
+            }
+        });
+        return "OK";
+    }
+
+    public String DisableRotation() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.DisableRotation();
+        return "OK";
+
+    }
+
+    public String EnableRotation() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.EnableRotation();
+        return "OK";
+    }
+
+    public void hideBusyCircle() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.getHostEnvironment().hideBusyCircle();
+    }
+
+    public void showBusyCircle() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            app.getHostEnvironment().showBusyCircle();
+    }
+
+    public String getSystemDirs() {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getHostEnvironment().getSystemDirs();
+        return "";
+    }
+
+    public String SecureFileCopy(String inFile, String outFile) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getFileController().SecureFileCopy(inFile, outFile);
+        return "";
+    }
+
+    public String createProcSync5stdout(String cmd, String arg1, String arg2, String arg3, String arg4, String arg5) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProcSync5stdout(cmd, arg1, arg2, arg3, arg4, arg5);
+        return "";
+    }
+    public String createProc(String cmd, String arg1, String arg2, String arg3, String arg4, String arg5, String arg6, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProc(cmd, arg1, arg2, arg3, arg4, arg5, arg6, libPath);
+        return "";
+    }
+
+    public String CreateProc(String cmd, String arg1, String arg2, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProc(cmd,
+                    arg1, arg2, libPath);
+        return "";
+    }
+
+    public String createProcSync4(String cmd, String arg1, String arg2, String arg3, String arg4, String libPath) {
+        AppController app = getAppControllerShim();
+        if (app != null)
+            return app.getProcessController().createProcSync4( cmd,
+                    arg1, arg2, arg3, arg4,libPath);
+
+        return "";
+    }
 
 }
