@@ -414,18 +414,6 @@ dependencies {
     }
 
 
-    //task copyQTPlugins_arm64_v8a(type: Copy) {
-        //from "${Qt_Base}/${Qt_Build_ARM64}/qtbase/plugins/platforms/android/libqtforandroid.so"
-        //from "${Qt_Base}/${Qt_Build_ARM64}/qtbase/plugins/styles/libqandroidstyle.so"
-
-      //  from "${Qt_base}/plugins/platforms/libplugins_platforms_qtforandroid_x86_64.so"
-      //  from "${Qt_base}/plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so"
-
-      //  into 'src/main/assets/files/Qtplugins/arm64-v8a'
-
-        //rename ('libqtforandroid.so', 'libplugins_platforms_android_libqtforandroid.so')
-        //rename ('libqandroidstyle.so', 'libplugins_styles_libqandroidstyle.so')
-    //}
 
     task copyQTLibs_arm64_v8a(type: Copy) {
         from "${Qt_Base}/lib/libQt5Core.so"
@@ -438,7 +426,6 @@ dependencies {
 
         into 'src/main/jniLibs/arm64-v8a'
      }
-
 
     task copyOCPN_CORE_64(type: Copy) {
         from "/home/dsr/Projects/opencpn/build_android_64_515_27_16k/libgorp.so"
@@ -490,7 +477,7 @@ dependencies {
     }
 
     task copySERVERFiles64(type: Copy) {
-        from "/home/dsr/Projects/o-charts_pi/libs/oeserverd/oeserverda_android/arm64/oexserverd"
+        from "/home/dsr/Projects/o-charts_pi/libs/oeserverd/oeserverd_android/arm64/oexserverd"
         into 'src/main/jniLibs/arm64-v8a'
 
         rename('oexserverd', 'liboexserverd.so')
