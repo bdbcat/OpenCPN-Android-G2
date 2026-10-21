@@ -15,10 +15,16 @@ import android.util.Log;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import com.arieslabs.assetbridge.Assetbridge;
 
@@ -166,7 +172,11 @@ public class OpenCPNBridge {
         m_filesDir = resolveFilesDir();
         Log.i("OpenCPN", "Application filesDir: " + m_filesDir);
 
-        setupLogDir();
+        // Purge Cache directory, if it exists
+        String cache_dir = activity.getExternalCacheDir().getAbsolutePath();
+        deleteDirectoryContents(cache_dir);
+
+         setupLogDir();
 
         boolean needsCopy = checkInstallState(m_filesDir);
 
@@ -207,6 +217,25 @@ public class OpenCPNBridge {
 
         return filesDir;
 
+    }
+
+    public static void deleteDirectoryContents(String dirPath) {
+        Path rootPath = Paths.get(dirPath);
+        if (!Files.exists(rootPath)) return;
+
+        try (Stream<Path> walk = Files.walk(rootPath)) {
+            walk.filter(p -> !p.equals(rootPath)) // Avoid deleting the root directory
+                    .sorted(Comparator.reverseOrder()) // Delete files before their parent subfolders
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+        } catch (IOException eo) {
+            eo.printStackTrace();
+        }
     }
 
     private static void setupLogDir() {
