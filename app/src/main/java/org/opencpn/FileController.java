@@ -814,7 +814,7 @@ public class FileController {
                     String sUri = preferences.getString("filestorageuri", "");
                     if (sUri.isEmpty()) {
                         //StartSAFDirSelector(Suggestion, "Documents");
-                        return "OK";
+                        //return "OK";
                     }
 
                     // All is well, fire off the equivalent of a "Save-as" dialog.
