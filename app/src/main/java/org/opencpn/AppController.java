@@ -368,6 +368,8 @@ public class AppController {
         if (Build.VERSION.SDK_INT < 33) {
             if (tlw > 1)
                 do_exit = false;
+            else
+                do_exit = true;
         }
         else {
             if (tlw > 1) {
