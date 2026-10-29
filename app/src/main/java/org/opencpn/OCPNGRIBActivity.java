@@ -97,7 +97,6 @@ public class OCPNGRIBActivity extends Activity
       }
 
     private SharedPreferences m_prefs;
-    private String storedUriString = "";
     private String m_treeId = "Documents";
 
     public static String getDisplayName(Context context, Uri uri) {
@@ -201,20 +200,22 @@ public class OCPNGRIBActivity extends Activity
         m_prefs = getSharedPreferences(
                 SafManager.PREFS_NAME, Activity.MODE_PRIVATE);
 
+        Uri targetUri = DocumentsContract.buildTreeDocumentUri(
+                "com.android.externalstorage.documents",
+                "primary:Documents"
+        );
+
         try {
             // ------------------------------------------------------------
             // Check existing persisted permission
             // ------------------------------------------------------------
-            storedUriString = m_prefs.getString("tree_uri_" + m_treeId,null);
+            if (targetUri != null) {
 
-            if (storedUriString != null) {
-                Uri storedUri =
-                        Uri.parse(storedUriString);
                 for (UriPermission perm :
                         getContentResolver()
                                 .getPersistedUriPermissions()) {
 
-                    if (perm.getUri().equals(storedUri)
+                    if (perm.getUri().equals(targetUri)
                             && perm.isReadPermission()) {
                         // --------------------------------------------
                         // Already authorized
@@ -244,10 +245,10 @@ public class OCPNGRIBActivity extends Activity
             // hint initial location if previously known
             // ------------------------------------------------------------
 
-            if(storedUriString != null) {
+            if(targetUri != null) {
                 intent.putExtra(
                         DocumentsContract.EXTRA_INITIAL_URI,
-                        Uri.parse(storedUriString)
+                        Uri.parse(targetUri.toString())
                 );
             }
             startActivityForResult( intent, 3);

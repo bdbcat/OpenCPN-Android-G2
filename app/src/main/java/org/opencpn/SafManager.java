@@ -171,49 +171,40 @@ public class SafManager {
 // --------------------------------------------------------------------
 
     public String ensureTreeAccess(int seq, String treeId) {
-
         try {
-
-
             // ------------------------------------------------------------
             // Check existing persisted permission
             // ------------------------------------------------------------
 
-            String storedUriString =
-                    prefs.getString(
-                            "tree_uri_" + treeId,
-                            null
-                    );
+            Uri targetUri = DocumentsContract.buildTreeDocumentUri(
+                    "com.android.externalstorage.documents",
+                    "primary:Documents"
+            );
 
-            if(storedUriString != null) {
 
-                Uri storedUri =
-                        Uri.parse(storedUriString);
-
-                for(UriPermission perm :
+            for(UriPermission perm :
                         activity.getContentResolver()
                                 .getPersistedUriPermissions()) {
 
-                    if(perm.getUri().equals(storedUri)
-                            && perm.isReadPermission()) {
+                if(perm.getUri().equals(targetUri)
+                            && perm.isReadPermission()
+                            && perm.isWritePermission()) {
 
-                        // --------------------------------------------
-                        // Already authorized
-                        // --------------------------------------------
+                // --------------------------------------------
+                // Already authorized
+                // --------------------------------------------
 
-                        nativeBridge.postJsonEvent(
+                nativeBridge.postJsonEvent(
                                 JsonHelpers.makeEvent(seq,
                                         "safTreeReady",
                                         "treeId",
                                         treeId,
                                         "uri",
-                                        storedUri.toString()
-                                )
-                        );
+                                        targetUri.toString()));
 
                         return "NOP";
-                    }
                 }
+
             }
 
             // ------------------------------------------------------------
@@ -248,11 +239,11 @@ public class SafManager {
             // hint initial location if previously known
             // ------------------------------------------------------------
 
-            if(storedUriString != null) {
+            if(targetUri != null) {
 
                 intent.putExtra(
                         DocumentsContract.EXTRA_INITIAL_URI,
-                        Uri.parse(storedUriString)
+                        Uri.parse(targetUri.toString())
                 );
             }
 
