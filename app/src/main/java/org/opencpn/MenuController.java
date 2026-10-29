@@ -328,12 +328,14 @@ public class MenuController {
     }
     
     public String setFollowIconState(int state) {
+        //Log.i("OpenCPN","setFollowIconState " + String.valueOf(state));
         menuState.followState = state;
         applyButtonState();
         return "OK";
     }
 
     public String setTrackingIconState(int state) {
+        //Log.i("OpenCPN","SET_TRACKING_ICON_STATE "+ String.valueOf(state));
         menuState.trackActive = (state == 1);
         applyButtonState();
         return "OK";
@@ -354,6 +356,7 @@ public class MenuController {
                         followButton.setImageResource(R.drawable.follow);
                         break;
                     case 1:
+                    case 2:
                         followButton.setImageResource(R.drawable.follow_active_green);
                         break;
                 }
