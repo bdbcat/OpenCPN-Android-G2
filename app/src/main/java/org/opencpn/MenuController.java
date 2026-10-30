@@ -371,6 +371,9 @@ public class MenuController {
     }
 
     public void applyMenuState(Menu menu) {
+        // Menu actually shown?
+        if (menu == null) return;
+
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
